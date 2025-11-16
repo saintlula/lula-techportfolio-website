@@ -1,0 +1,131 @@
+/* Base stylesheet for the app background
+   - Ensures the document and root element fill the viewport
+   - Sets a solid black background as the underlying layer
+   - Hides overflow so animated/background elements don't create scrollbars
+*/
+body, html, #root 
+{
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: #000000;
+  overflow: hidden;
+}
+
+/* Subtle moving overlay used to simulate film/static or a shifting texture.
+   ::before is fixed so it stays relative to the viewport, not the document flow.
+   pointer-events: none keeps it non-interactive so it won't block UI input.
+   mix-blend-mode: screen affects how this layer visually blends with layers below.
+*/
+#root::before 
+{
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+
+  opacity: 0.30;
+  mix-blend-mode: screen;
+
+  animation: staticShift 1.6s steps(6) infinite;
+}
+
+/* Keyframes that drive the subtle jitter/shift used by ::before.
+   Uses steps(6) for a choppy, film-like stepping effect.
+*/
+@keyframes staticShift 
+{
+  0%   { transform: translate(0,0); }
+  25%  { transform: translate(-2px, 1px); }
+  50%  { transform: translate(2px,-1px); }
+  75%  { transform: translate(-1px,-1px); }
+  100% { transform: translate(0,0); }
+}
+
+/* ::after creates the main soft, blurred atmospheric background
+   - spans 300% height to allow a vertical looping translate animation
+   - multiple layered gradients produce smoke pockets, orange glows, and a soft wash
+   - filter: blur softens all layers into an ambient backdrop
+   - opacity & mix/blend are tuned to sit nicely over the black base
+*/
+#root::after 
+{
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+
+  width: 100%;
+  height: 300%;
+
+  pointer-events: none;
+
+  /* dark gradiented orange */
+  background:
+
+    /* DARK SMOKE POCKETS TO ADD DEPTH
+       - radial gradients with semi-opaque blacks create subtle shadow pockets
+       - positioned with 'circle at x% y%' to place them asymmetrically
+    */
+    repeating-radial-gradient(
+      circle at 30% 40%,
+      rgba(0, 0, 0, 0.25) 10%,
+      rgba(0, 0, 0, 0) 55%
+    ),
+    repeating-radial-gradient(
+      circle at 70% 70%,
+      rgba(20, 20, 20, 0.20) 0%,
+      rgba(20, 20, 20, 0) 45%
+    ),
+
+    /* orange blobs/glows
+       - add warm highlights using orange tones with varying opacities
+       - these provide the glowing focal areas
+    */
+    repeating-radial-gradient(
+      circle at 20% 30%,
+      rgba(255, 120, 0, 0.45) 0%,
+      rgba(255, 120, 0, 0) 30%,
+      rgba(255, 80, 0, 0.45) 80%
+    ),
+    repeating-radial-gradient(
+      circle at 70% 55%,
+      rgba(255, 140, 0, 0.38) 0%,
+      rgba(255, 140, 0, 0) 45%,
+      rgba(255, 100, 0, 0.42) 90%
+    ),
+
+    /* SOFT ORANGE WASH — LOWER SATURATION SLIGHTLY
+       - a vertical linear wash to tie the orange tones together across the screen
+    */
+    repeating-linear-gradient(
+      to bottom,
+      rgba(255, 139, 0, 0.25) 20%,
+      rgba(255, 80, 0, 0.20) 50%,
+      rgba(255, 139, 0, 0.25) 10%
+    );
+
+  /* background-size defines how the composite image tiles/scales.
+     filter: blur creates the soft, out-of-focus glow look.
+  */
+  background-size: 100% 50%;
+  filter: blur(70px);
+  opacity: 0.9;
+
+  /* slow vertical scrolling loop to create a drifting effect */
+  animation: satinLoop 20s linear infinite;
+}
+
+/* Moves the ::after background upward over time.
+   The height (300%) and background-size (100% 50%) combine with this
+   transform to produce a seamless vertical loop.
+*/
+@keyframes satinLoop 
+{
+  0% { transform: translateY(0%); }
+  100% { transform: translateY(-50%); }
+}
