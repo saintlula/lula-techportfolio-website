@@ -1,13 +1,31 @@
 import { useEffect, useRef } from "react";
 import "./movingBlobs.css";
 
+/*
+  Rewritten to use relative units (vw, vh, vmin) so the interactive blobs scale across screens.
+  Approach summary:
+   - blobsSeed contains the original numeric values (interpreted as pixels for initial layout).
+   - Inside useEffect we convert those seed pixel values into relative viewport units:
+       * x  -> vw-percent (0..100)
+       * y  -> vh-percent (0..100)
+       * size -> vmin-percent (so size scales consistently across aspect ratios)
+       * speed -> vh-percent-per-frame (so upward motion preserves visual rate relative to viewport)
+   - Cursor avoidance is computed in pixels (mouse events give pixels). Forces (px) are converted into vw/vh
+     deltas before being applied so final CSS uses vw/vh and vmin exclusively.
+   - pointer-events: none is set on each blob via inline style to keep them non-interactive.
+   - Animation uses requestAnimationFrame and is cleaned up on unmount.
+*/
+
 export default function MovingBlobs() 
 {
-  // Refs to DOM elements for each blob so we can update styles directly
+  // Refs to DOM elements so the animation loop can update style directly
   const blobsRef = useRef([]);
+  // ref to hold animation frame id so we can cancel on unmount
+  const rafRef = useRef(null);
 
-  // Blob data: starting x/y position, rendered size in px, and vertical speed
-  const blobsData = 
+  // Original seed values (interpreted as px when converting). The seed numbers are preserved
+  // so we can base the relative conversions on them.
+  const blobsSeed = 
   [
     { x: 100, y: 100, size: 150, speed: 0.12 },
     { x: 500, y: 400, size: 220, speed: 0.15 },
@@ -22,12 +40,13 @@ export default function MovingBlobs()
   ];
 
   useEffect(() => 
-    {
+  {
     const blobs = blobsRef.current;
+
     // Mouse position tracked to make blobs avoid cursor
     const mouse = { x: null, y: null };
 
-    // Update mouse coordinates on move
+    // Update mouse coordinates on move (pixels)
     const handleMouseMove = (e) => 
     {
       mouse.x = e.clientX;
@@ -36,92 +55,169 @@ export default function MovingBlobs()
 
     window.addEventListener("mousemove", handleMouseMove);
 
-    // Track displacement offsets for each blob (dx/dy) that are applied on top of its natural position.
-    // This allows a "slimy" or springy response when blobs react to the cursor.
-    const displacement = blobsData.map(() => ({ dx: 0, dy: 0 }));
+    // Convert seed values into viewport-relative units.
+    // dataList stores: x (vw%), y (vh%), size (vmin%), speed (vh% per frame)
+    const makeDataList = () => {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      const vmin = Math.min(w, h);
 
-    // Main animation loop that updates DOM positions each frame
+      return blobsSeed.map((s) => {
+        return {
+          // percent of viewport width (0..100)
+          x: (s.x / w) * 100,
+          // percent of viewport height (0..100)
+          y: (s.y / h) * 100,
+          // size as percent of vmin so width/height use vmin and scale consistently
+          size: (s.size / vmin) * 100,
+          // convert original pixel-based speed into vh-percent-per-frame so upward motion scales
+          // (s.speed was originally a small pixel-like increment; convert by viewport height)
+          speed: (s.speed / h) * 100,
+        };
+      });
+    };
+
+    // Working data used by animation loop
+    let dataList = makeDataList();
+
+    // Displacement in relative units: dx (vw-percent) and dy (vh-percent)
+    const displacement = dataList.map(() => ({ dx: 0, dy: 0 }));
+
+    // Recompute sizes/units on resize so blobs remain spread across the screen.
+    const handleResize = () => {
+      // recompute dataList but preserve current normalized positions and sizes proportionally.
+      // We regenerate from seed so layout stays consistent relative to viewport.
+      dataList = makeDataList();
+      // reset displacements to avoid artifacts after large resize
+      displacement.forEach((d) => { d.dx = 0; d.dy = 0; });
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    // Main animation loop
     const animate = () => {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      const vmin = Math.min(w, h);
+
       blobs.forEach((blob, idx) => 
       {
         if (!blob) return;
-        const data = blobsData[idx];
+        const data = dataList[idx];
 
-        // Move blob upward along its natural path by its speed value
+        // Move blob upward in vh-percent units by its speed (vh% per frame)
         data.y -= data.speed;
 
-        // Wrap blob to bottom when it moves past the top (gives continuous spawn)
-        if (data.y + data.size < -50) 
+        // Calculate size in pixels (based on vmin) for accurate pixel collision checks and cursor math
+        const sizePx = (data.size / 100) * vmin;
+        const posXPx = (data.x / 100) * w;
+        const posYPx = (data.y / 100) * h;
+
+        // Wrap blob to bottom when it moves past the top (gives continuous spawn).
+        // We use a pixel-based check to match the original behavior (use -50px threshold similar to before)
+        if (posYPx + sizePx < -50) 
         {
-          data.y = window.innerHeight + Math.random() * 100;
-          data.x = Math.random() * (window.innerWidth - data.size);
+          // Respawn just below the bottom of the viewport, randomized across width.
+          // Keep using viewport-relative values for placement.
+          const extraPx = Math.random() * 100; // up to 100px offset as before
+          data.y = ((h + extraPx) / h) * 100; // convert px -> vh%
+          data.x = (Math.random() * (w - sizePx) / w) * 100; // random vw% ensuring blob stays in bounds
           // Reset displacement to avoid sudden jump artifacts after respawn
           displacement[idx].dx = 0;
           displacement[idx].dy = 0;
         }
 
-        // Calculate cursor avoidance: if cursor is within a safe radius, push blob away
-        let targetDX = 0;
-        let targetDY = 0;
+        // Calculate cursor avoidance:
+        // We'll compute the cursor->blob vector in pixels, compute force in pixels (preserving safeDistance = 200px),
+        // then convert that pixel force into vw/vh deltas to apply to displacement.
+        let targetDXvw = 0; // target displacement in vw-percent
+        let targetDYvh = 0; // target displacement in vh-percent
         if (mouse.x !== null && mouse.y !== null) 
         {
-          // Vector from cursor to blob center
-          const dx = data.x + data.size / 2 - mouse.x;
-          const dy = data.y + data.size / 2 - mouse.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          const safeDistance = 200;
+          // Blob center in pixels
+          const centerX = posXPx + sizePx / 2;
+          const centerY = posYPx + sizePx / 2;
 
-          // If inside safeDistance, compute a force proportional to how close cursor is
-          if (dist < safeDistance) {
-            const force = (safeDistance - dist) * 2.5;
+          // Vector from cursor to blob center (pixels)
+          const dx = centerX - mouse.x;
+          const dy = centerY - mouse.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          const safeDistance = 200; // preserved from original code (pixels)
+
+          if (dist < safeDistance && dist > 0.0001) {
+            // Force proportional to how close the cursor is (in pixels), same formula as original
+            const forcePx = (safeDistance - dist) * 2.5;
             const angle = Math.atan2(dy, dx);
-            targetDX = Math.cos(angle) * force;
-            targetDY = Math.sin(angle) * force;
+            const forceXpx = Math.cos(angle) * forcePx;
+            const forceYpx = Math.sin(angle) * forcePx;
+
+            // Convert pixel forces into viewport-percent deltas so we can add to data.x/data.y
+            targetDXvw = (forceXpx / w) * 100;
+            targetDYvh = (forceYpx / h) * 100;
           }
         }
 
-        // Smoothly interpolate displacement towards the target to create a spring / "slime" effect
+        // Smoothly interpolate displacement towards the target to create spring/"slime" feel.
         const lerp = 0.05;
-        displacement[idx].dx += (targetDX - displacement[idx].dx) * lerp;
-        displacement[idx].dy += (targetDY - displacement[idx].dy) * lerp;
+        displacement[idx].dx += (targetDXvw - displacement[idx].dx) * lerp;
+        displacement[idx].dy += (targetDYvh - displacement[idx].dy) * lerp;
 
-        // Final position = natural position + displacement offset
-        const finalX = data.x + displacement[idx].dx;
-        const finalY = data.y + displacement[idx].dy;
+        // Final positions in relative units
+        const finalXvw = data.x + displacement[idx].dx;
+        const finalYvh = data.y + displacement[idx].dy;
 
-        // Apply to DOM element. Using style.left/top for simpler pixel-controlled movement.
-        blob.style.left = `${finalX}px`;
-        blob.style.top = `${finalY}px`;
+        // Apply to DOM element with relative units (vw/vh for position, vmin for size).
+        // Also ensure blobs themselves don't block pointer events.
+        blob.style.left = `${finalXvw}vw`;
+        blob.style.top = `${finalYvh}vh`;
+        blob.style.width = `${data.size}vmin`;
+        blob.style.height = `${data.size}vmin`;
+        blob.style.pointerEvents = "none";
       });
 
-      // Schedule next frame
-      requestAnimationFrame(animate);
+      rafRef.current = requestAnimationFrame(animate);
     };
 
     // Start animation
-    animate();
+    rafRef.current = requestAnimationFrame(animate);
 
-    // Clean up mouse listener on unmount
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, []);
+    // Clean up on unmount: remove listeners and cancel animation frame
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("resize", handleResize);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, []); // empty deps - run once on mount
 
-  // Render blob elements; their inline style sets initial position/size.
+  // Render blob elements; inline style sets initial positions using the seed converted values.
+  // We still provide initial vw/vh/vmin values so layout is correct before animation starts.
   // Refs are assigned so the animation loop can mutate the DOM nodes.
   return (
     <div className="moving-blobs">
-      {blobsData.map((blob, idx) => (
-        <div
-          key={idx}
-          ref={(el) => (blobsRef.current[idx] = el)}
-          className="blob"
-          style={{
-            top: `${blob.y}px`,
-            left: `${blob.x}px`,
-            width: `${blob.size}px`,
-            height: `${blob.size}px`,
-          }}
-        ></div>
-      ))}
+      {blobsSeed.map((blob, idx) => {
+        // compute initial relative units for serverless initial render (approximate until effect runs)
+        const w = typeof window !== "undefined" ? window.innerWidth : 1440;
+        const h = typeof window !== "undefined" ? window.innerHeight : 900;
+        const vmin = Math.min(w, h);
+        const xvw = (blob.x / w) * 100;
+        const yvh = (blob.y / h) * 100;
+        const sizeVmin = (blob.size / vmin) * 100;
+
+        return (
+          <div
+            key={idx}
+            ref={(el) => (blobsRef.current[idx] = el)}
+            className="blob"
+            style={{
+              top: `${yvh}vh`,
+              left: `${xvw}vw`,
+              width: `${sizeVmin}vmin`,
+              height: `${sizeVmin}vmin`,
+              pointerEvents: "none",
+            }}
+          ></div>
+        );
+      })}
     </div>
   );
 }
