@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import "./MovingBlobs.css";
+import "./movingBlobs.css";
 
 export default function MovingBlobs() 
 {
