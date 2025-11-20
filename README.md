@@ -1,16 +1,19 @@
-# React + Vite
+# Portfolio Website
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Welcome to my little corner of the web! 
+This is my humble attempt at creating a visually appealing, interactive portfolio to showcase my projects and skills.
 
-Currently, two official plugins are available:
+## Tech Stack
+For this project, I chose:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+<img src="https://raw.githubusercontent.com/github/explore/main/topics/react/react.png" width="20"> **React** for building a dynamic UI
 
-## React Compiler
+<img src="https://vitejs.dev/logo.svg" width="20"> **Vite** for lightning-fast development and bundling
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+<img src="https://raw.githubusercontent.com/github/explore/main/topics/css/css.png" width="20"> **Vanilla CSS** for styling
 
-## Expanding the ESLint configuration
+<img src="https://raw.githubusercontent.com/github/explore/main/topics/javascript/javascript.png" width="20"> **JavaScript** for all the logic behind the scenes
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## About This Project
+This website is meant to be a small, responsive and interactive hub where you can explore some of my projects, check out my tech experience and get a feel for my design and coding style!
+
