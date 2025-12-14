@@ -1,2 +1,43 @@
-/* Intentionally empty at the moment.
-   App-level layout is handled in App.jsx */
+﻿@font-face {
+  font-family: 'KumarOne-Regular';
+  src: url('./assets/fonts/KumarOne-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+
+/* Make the app take the full screen */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
+
+/* Container holds background + centered text */
+.app-container {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Stack the three CLICK texts vertically */
+.click-stack {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.shuffle-parent {
+  font-family: 'KumarOne-Regular', sans-serif; 
+  font-size: clamp(3rem, 8vw, 6rem); /* responsive large text */
+  text-align: center;
+  line-height: 1.1; /* tighten spacing */
+  display: block; /* ensures each line behaves properly */
+}

@@ -1,8 +1,11 @@
-import FaultyTerminal from './components/FaultyTerminal';
+import FaultyTerminal from './component/FaultyTerminal';
+import Shuffle from './component/Shuffle';
+import './App.css';
 
 function App() {
   return (
-    <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
+    <div className="app-container">
+      {/* Background */}
       <FaultyTerminal
         scale={2.5}
         gridMul={[2, 1]}
@@ -14,13 +17,20 @@ function App() {
         noiseAmp={1}
         chromaticAberration={0}
         dither={0}
-        curvature={0.08}
+        curvature={0.10}
         tint="#A7EF9E"
         mouseReact={true}
         mouseStrength={0.5}
         pageLoadAnimation={true}
         brightness={1}
       />
+
+      {/* Centered Click Texts */}
+      <div className="click-stack">
+        <Shuffle text="CLICK" />
+        <Shuffle text="CLICK" />
+        <Shuffle text="CLICK" />
+      </div>
     </div>
   );
 }
