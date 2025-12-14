@@ -1,4 +1,4 @@
-.shuffle-parent {
+﻿.shuffle-parent {
   display: inline-block;
   white-space: normal;
   word-wrap: break-word;
@@ -8,6 +8,23 @@
   font-family: 'Press Start 2P', sans-serif;
   text-transform: uppercase;
   visibility: hidden;
+  color: #f5f1ea;
+
+
+  /*word backing*/
+  text-shadow:
+    3px 0px 0px #000,
+   -3px 0px 0px #000,
+    0px 3px 0px #000,
+    0px -3px 0px #000,
+
+    3px 3px 0px #000,
+   -3px 3px 0px #000,
+    3px -3px 0px #000,
+   -3px -3px 0px #000,
+
+    /* outer soft support */
+    0px 0px 14px rgba(0, 0, 0, 0.7);
 }
 
 .shuffle-parent.is-ready {

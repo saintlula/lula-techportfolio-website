@@ -1,6 +1,33 @@
+﻿import { useState } from 'react';
 import FaultyTerminal from './component/FaultyTerminal';
 import Shuffle from './component/Shuffle';
 import './App.css';
+
+/* 
+  This component controls hover behavior.
+  It forces Shuffle to remount when text changes
+  so GSAP rebuilds correctly.
+*/
+function HoverShuffle({ defaultText, hoverText }) {
+  const [isHovered, setIsHovered] = useState(false);
+
+  const textToShow = isHovered ? hoverText : defaultText;
+
+  return (
+    <div
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      style={{ cursor: 'pointer' }}
+    >
+      <Shuffle
+        key={textToShow}     // 🔥 CRITICAL FIX
+        text={textToShow}
+        loop={true}
+        triggerOnce={true}
+      />
+    </div>
+  );
+}
 
 function App() {
   return (
@@ -17,7 +44,7 @@ function App() {
         noiseAmp={1}
         chromaticAberration={0}
         dither={0}
-        curvature={0.10}
+        curvature={0.15}
         tint="#A7EF9E"
         mouseReact={true}
         mouseStrength={0.5}
@@ -27,9 +54,9 @@ function App() {
 
       {/* Centered Click Texts */}
       <div className="click-stack">
-        <Shuffle text="CLICK" />
-        <Shuffle text="CLICK" />
-        <Shuffle text="CLICK" />
+        <HoverShuffle defaultText="CLICK" hoverText="ABOUT" />
+        <HoverShuffle defaultText="CLICK" hoverText="RESUME" />
+        <HoverShuffle defaultText="CLICK" hoverText="COVER" />
       </div>
     </div>
   );
