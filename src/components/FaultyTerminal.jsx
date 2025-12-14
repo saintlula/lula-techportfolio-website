@@ -233,7 +233,7 @@ export default function FaultyTerminal({
   dither = 0,
   curvature = 0.2,
   tint = '#ffffff',
-  mouseReact = true,
+  mouseReact = false,
   mouseStrength = 0.2,
   dpr = Math.min(window.devicePixelRatio || 1, 2),
   pageLoadAnimation = true,
@@ -253,7 +253,6 @@ export default function FaultyTerminal({
   const timeOffsetRef = useRef(Math.random() * 100);
 
   const tintVec = useMemo(() => hexToRgb(tint), [tint]);
-
   const ditherValue = useMemo(() => (typeof dither === 'boolean' ? (dither ? 1 : 0) : dither), [dither]);
 
   const handleMouseMove = useCallback(e => {
@@ -269,7 +268,7 @@ export default function FaultyTerminal({
     const ctn = containerRef.current;
     if (!ctn) return;
 
-    const renderer = new Renderer({ dpr });
+    const renderer = new Renderer({ dpr: 1 });
     rendererRef.current = renderer;
     const gl = renderer.gl;
     gl.clearColor(0, 0, 0, 1);
@@ -281,11 +280,8 @@ export default function FaultyTerminal({
       fragment: fragmentShader,
       uniforms: {
         iTime: { value: 0 },
-        iResolution: {
-          value: new Color(gl.canvas.width, gl.canvas.height, gl.canvas.width / gl.canvas.height)
-        },
+        iResolution: { value: new Color(gl.canvas.width, gl.canvas.height, gl.canvas.width / gl.canvas.height) },
         uScale: { value: scale },
-
         uGridMul: { value: new Float32Array(gridMul) },
         uDigitSize: { value: digitSize },
         uScanlineIntensity: { value: scanlineIntensity },
@@ -296,9 +292,7 @@ export default function FaultyTerminal({
         uDither: { value: ditherValue },
         uCurvature: { value: curvature },
         uTint: { value: new Color(tintVec[0], tintVec[1], tintVec[2]) },
-        uMouse: {
-          value: new Float32Array([smoothMouseRef.current.x, smoothMouseRef.current.y])
-        },
+        uMouse: { value: new Float32Array([smoothMouseRef.current.x, smoothMouseRef.current.y]) },
         uMouseStrength: { value: mouseStrength },
         uUseMouse: { value: mouseReact ? 1 : 0 },
         uPageLoadProgress: { value: pageLoadAnimation ? 0 : 1 },
@@ -310,26 +304,19 @@ export default function FaultyTerminal({
 
     const mesh = new Mesh(gl, { geometry, program });
 
-function resize() {
-  if (!ctn || !renderer) return;
+    const resize = () => {
+      const w = ctn.clientWidth;
+      const h = Math.min(ctn.clientHeight, window.innerHeight);
+      renderer.setSize(w, h);
+      program.uniforms.iResolution.value.set(w, h, w / h);
+    };
 
-  //Limiting canvas height to viewport
-  const width = ctn.offsetWidth;
-  const height = Math.min(ctn.offsetHeight, window.innerHeight); //preventing crazy heights
-
-  renderer.setSize(width, height);
-
-  program.uniforms.iResolution.value = new Color(
-    width,
-    height,
-    width / height
-  );
-}
-
-
-    const resizeObserver = new ResizeObserver(() => resize());
-    resizeObserver.observe(ctn);
     resize();
+    window.addEventListener('resize', resize);
+
+    // Set DPR properly
+    const finalDpr = Math.min(window.devicePixelRatio || 1, 2);
+    renderer.dpr = finalDpr;
 
     const update = t => {
       rafRef.current = requestAnimationFrame(update);
@@ -367,6 +354,7 @@ function resize() {
 
       renderer.render({ scene: mesh });
     };
+
     rafRef.current = requestAnimationFrame(update);
     ctn.appendChild(gl.canvas);
 
@@ -374,12 +362,10 @@ function resize() {
 
     return () => {
       cancelAnimationFrame(rafRef.current);
-      resizeObserver.disconnect();
-      if (mouseReact) ctn.removeEventListener('mousemove', handleMouseMove);
-      if (gl.canvas.parentElement === ctn) ctn.removeChild(gl.canvas);
-      gl.getExtension('WEBGL_lose_context')?.loseContext();
-      loadAnimationStartRef.current = 0;
-      timeOffsetRef.current = Math.random() * 100;
+      window.removeEventListener('resize', resize);
+      if (process.env.NODE_ENV === 'production') {
+        gl.getExtension('WEBGL_lose_context')?.loseContext();
+      }
     };
   }, [
     dpr,
