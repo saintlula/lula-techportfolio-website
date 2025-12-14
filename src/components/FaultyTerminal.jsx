@@ -310,15 +310,22 @@ export default function FaultyTerminal({
 
     const mesh = new Mesh(gl, { geometry, program });
 
-    function resize() {
-      if (!ctn || !renderer) return;
-      renderer.setSize(ctn.offsetWidth, ctn.offsetHeight);
-      program.uniforms.iResolution.value = new Color(
-        gl.canvas.width,
-        gl.canvas.height,
-        gl.canvas.width / gl.canvas.height
-      );
-    }
+function resize() {
+  if (!ctn || !renderer) return;
+
+  //Limiting canvas height to viewport
+  const width = ctn.offsetWidth;
+  const height = Math.min(ctn.offsetHeight, window.innerHeight); //preventing crazy heights
+
+  renderer.setSize(width, height);
+
+  program.uniforms.iResolution.value = new Color(
+    width,
+    height,
+    width / height
+  );
+}
+
 
     const resizeObserver = new ResizeObserver(() => resize());
     resizeObserver.observe(ctn);

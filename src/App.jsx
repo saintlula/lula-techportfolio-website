@@ -4,10 +4,9 @@ function App() {
   return (
     <div
       style={{
-        width: "100vw",
-        height: "100vh",
-        position: "relative",
-        overflow: "hidden",
+        width: '100vw',   // full viewport width
+        height: '100vh',  // full viewport height
+        position: 'relative'
       }}
     >
       {/* Background */}
