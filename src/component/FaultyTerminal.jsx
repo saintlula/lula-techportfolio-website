@@ -256,13 +256,11 @@ export default function FaultyTerminal({
   const ditherValue = useMemo(() => (typeof dither === 'boolean' ? (dither ? 1 : 0) : dither), [dither]);
 
   const handleMouseMove = useCallback(e => {
-    const ctn = containerRef.current;
-    if (!ctn) return;
-    const rect = ctn.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width;
-    const y = 1 - (e.clientY - rect.top) / rect.height;
-    mouseRef.current = { x, y };
+   const x = e.clientX / window.innerWidth;
+   const y = 1 - e.clientY / window.innerHeight;
+   mouseRef.current = { x, y };
   }, []);
+
 
   useEffect(() => {
     const ctn = containerRef.current;
@@ -305,11 +303,13 @@ export default function FaultyTerminal({
     const mesh = new Mesh(gl, { geometry, program });
 
     const resize = () => {
-      const w = ctn.clientWidth;
-      const h = Math.min(ctn.clientHeight, window.innerHeight);
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+
       renderer.setSize(w, h);
       program.uniforms.iResolution.value.set(w, h, w / h);
     };
+
 
     resize();
     window.addEventListener('resize', resize);
@@ -358,11 +358,13 @@ export default function FaultyTerminal({
     rafRef.current = requestAnimationFrame(update);
     ctn.appendChild(gl.canvas);
 
-    if (mouseReact) ctn.addEventListener('mousemove', handleMouseMove);
+    if (mouseReact) window.addEventListener('mousemove', handleMouseMove);
 
     return () => {
       cancelAnimationFrame(rafRef.current);
       window.removeEventListener('resize', resize);
+      window.removeEventListener('mousemove', handleMouseMove);
+
       if (process.env.NODE_ENV === 'production') {
         gl.getExtension('WEBGL_lose_context')?.loseContext();
       }
