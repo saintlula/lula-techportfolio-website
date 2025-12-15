@@ -10,24 +10,36 @@ import './App.css';
 */
 function HoverShuffle({ defaultText, hoverText }) {
   const [isHovered, setIsHovered] = useState(false);
+  const [hoverKey, setHoverKey] = useState(0);
 
   const textToShow = isHovered ? hoverText : defaultText;
 
+  const handleMouseEnter = () => {
+    setIsHovered(true);
+    setHoverKey(prev => prev + 1); // force remount
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+    setHoverKey(prev => prev + 1); // force remount again to reset
+  };
+
   return (
     <div
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       style={{ cursor: 'pointer' }}
     >
       <Shuffle
-        key={textToShow}  
+        key={hoverKey}   // <--- key ensures full remount
         text={textToShow}
         loop={true}
-        triggerOnce={true}
+        triggerOnce={false}
       />
     </div>
   );
 }
+
 
 function App() {
   return (
