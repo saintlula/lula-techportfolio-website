@@ -6,7 +6,6 @@
   font-display: swap;
 }
 
-
 /* Make the app take the full screen */
 html, body, #root {
   height: 100%;
@@ -26,19 +25,22 @@ html, body, #root {
 
 /* Stack the three CLICK texts vertically */
 .click-stack {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  position: relative; /* remove absolute */
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
+  gap: 1rem; /* spacing between texts */
+  max-height: 90%; /* ensures all texts fit on screen */
+  overflow: hidden;
+  padding: 0 1rem; /* small padding for very small screens */
 }
 
 .shuffle-parent {
   font-family: 'AerojonesNF', sans-serif; 
-  font-size: clamp(3rem, 8vw, 6rem); /* responsive large text */
+  font-size: clamp(2.5rem, 5vw, 4rem); /* responsive and smaller max */
   text-align: center;
   line-height: 1.1; /* tighten spacing */
   display: block; /* ensures each line behaves properly */
+  word-wrap: break-word;
 }

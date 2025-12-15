@@ -3,8 +3,8 @@
   white-space: normal;
   word-wrap: break-word;
   will-change: transform;
-  line-height: 1;
-  font-size: 4rem;
+  line-height: 1.1; /* slightly taller to avoid overlap */
+  font-size: inherit; /* take font-size from parent */
   font-family: 'Press Start 2P', sans-serif;
   text-transform: uppercase;
   visibility: hidden;
