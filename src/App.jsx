@@ -20,7 +20,7 @@ function HoverShuffle({ defaultText, hoverText }) {
       style={{ cursor: 'pointer' }}
     >
       <Shuffle
-        key={textToShow}     // 🔥 CRITICAL FIX
+        key={textToShow}  
         text={textToShow}
         loop={true}
         triggerOnce={true}
@@ -54,9 +54,9 @@ function App() {
 
       {/* Centered Click Texts */}
       <div className="click-stack">
-        <HoverShuffle defaultText="CLICK" hoverText="ABOUT" />
-        <HoverShuffle defaultText="CLICK" hoverText="RESUME" />
-        <HoverShuffle defaultText="CLICK" hoverText="COVER" />
+        <HoverShuffle defaultText="ABOUT" hoverText="CLICK" />
+        <HoverShuffle defaultText="RESUME" hoverText="CLICK" />
+        <HoverShuffle defaultText="COVER" hoverText="CLICK" />
       </div>
     </div>
   );
