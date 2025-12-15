@@ -235,7 +235,6 @@ export default function FaultyTerminal({
   tint = '#ffffff',
   mouseReact = false,
   mouseStrength = 0.2,
-  dpr = Math.min(window.devicePixelRatio || 1, 2),
   pageLoadAnimation = true,
   brightness = 1,
   className,
@@ -256,17 +255,17 @@ export default function FaultyTerminal({
   const ditherValue = useMemo(() => (typeof dither === 'boolean' ? (dither ? 1 : 0) : dither), [dither]);
 
   const handleMouseMove = useCallback(e => {
-   const x = e.clientX / window.innerWidth;
-   const y = 1 - e.clientY / window.innerHeight;
-   mouseRef.current = { x, y };
+    const x = e.clientX / window.innerWidth;
+    const y = 1 - e.clientY / window.innerHeight;
+    mouseRef.current = { x, y };
   }, []);
-
 
   useEffect(() => {
     const ctn = containerRef.current;
     if (!ctn) return;
 
-    const renderer = new Renderer({ dpr: 1 });
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const renderer = new Renderer({ dpr, antialias: true });
     rendererRef.current = renderer;
     const gl = renderer.gl;
     gl.clearColor(0, 0, 0, 1);
@@ -307,16 +306,19 @@ export default function FaultyTerminal({
       const h = window.innerHeight;
 
       renderer.setSize(w, h);
-      program.uniforms.iResolution.value.set(w, h, w / h);
-    };
+      renderer.dpr = dpr;
 
+      program.uniforms.iResolution.value.set(w, h, w / h);
+
+      const referenceWidth = 1920;
+      const referenceHeight = 1080;
+      const scaleFactor = Math.min(w / referenceWidth, h / referenceHeight) * dpr;
+
+      program.uniforms.uScale.value = scale * scaleFactor;
+    };
 
     resize();
     window.addEventListener('resize', resize);
-
-    // Set DPR properly
-    const finalDpr = Math.min(window.devicePixelRatio || 1, 2);
-    renderer.dpr = finalDpr;
 
     const update = t => {
       rafRef.current = requestAnimationFrame(update);
@@ -370,7 +372,6 @@ export default function FaultyTerminal({
       }
     };
   }, [
-    dpr,
     pause,
     timeScale,
     scale,

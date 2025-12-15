@@ -45,7 +45,7 @@ function App() {
         chromaticAberration={0}
         dither={0}
         curvature={0.15}
-        tint="#A7EF9E"
+        tint="#7FAF7A"
         mouseReact={true}
         mouseStrength={0.5}
         pageLoadAnimation={true}
