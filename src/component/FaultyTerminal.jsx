@@ -1,4 +1,4 @@
-﻿import { Renderer, Program, Mesh, Color, Triangle } from 'ogl';
+import { Renderer, Program, Mesh, Color, Triangle } from 'ogl';
 import { useEffect, useRef, useMemo, useCallback } from 'react';
 import './FaultyTerminal.css';
 
@@ -37,8 +37,11 @@ uniform float uUseMouse;
 uniform float uPageLoadProgress;
 uniform float uUsePageLoadAnimation;
 uniform float uBrightness;
+uniform float uGatherProgress;
+uniform vec2  uTargetPos;
 
 float time;
+float grainTime; /* used for grain/scanlines; slow when zoomed out, normal on main screen */
 
 float hash21(vec2 p){
   p = fract(p * 234.56);
@@ -48,7 +51,7 @@ float hash21(vec2 p){
 
 float noise(vec2 p)
 {
-  return sin(p.x * 10.0) * sin(p.y * (3.0 + sin(time * 0.090909))) + 0.2; 
+  return sin(p.x * 10.0) * sin(p.y * (3.0 + sin(grainTime * 0.090909))) + 0.2; 
 }
 
 mat2 rotate(float angle)
@@ -64,17 +67,17 @@ float fbm(vec2 p)
   float f = 0.0;
   float amp = 0.5 * uNoiseAmp;
   
-  mat2 modify0 = rotate(time * 0.02);
+  mat2 modify0 = rotate(grainTime * 0.02);
   f += amp * noise(p);
   p = modify0 * p * 2.0;
   amp *= 0.454545;
   
-  mat2 modify1 = rotate(time * 0.02);
+  mat2 modify1 = rotate(grainTime * 0.02);
   f += amp * noise(p);
   p = modify1 * p * 2.0;
   amp *= 0.454545;
   
-  mat2 modify2 = rotate(time * 0.08);
+  mat2 modify2 = rotate(grainTime * 0.08);
   f += amp * noise(p);
   
   return f;
@@ -83,7 +86,7 @@ float fbm(vec2 p)
 float pattern(vec2 p, out vec2 q, out vec2 r) {
   vec2 offset1 = vec2(1.0);
   vec2 offset0 = vec2(0.0);
-  mat2 rot01 = rotate(0.1 * time);
+  mat2 rot01 = rotate(0.1 * grainTime);
   mat2 rot1 = rotate(0.1);
   
   q = vec2(fbm(p + offset1), fbm(rot01 * p + offset1));
@@ -150,7 +153,7 @@ float displace(vec2 look)
 
 vec3 getColor(vec2 p){
     
-    float bar = step(mod(p.y + time * 20.0, 1.0), 0.2) * 0.4 + 1.0;
+    float bar = step(mod(p.y + grainTime * 20.0, 1.0), 0.2) * 0.4 + 1.0;
     bar *= uScanlineIntensity;
     
     float displacement = displace(p);
@@ -181,13 +184,27 @@ vec2 barrel(vec2 uv){
 
 void main() {
     time = iTime * 0.333333;
+    /* Slower grain only when ZOOMED OUT (uGatherProgress > 0.5); main screen keeps original grain */
+    grainTime = (uGatherProgress > 0.5) ? (iTime * 0.005) : time;
     vec2 uv = vUv;
 
     if(uCurvature != 0.0){
       uv = barrel(uv);
     }
-    
+
     vec2 p = uv * uScale;
+    vec2 gridVec = uGridMul * 15.0;
+
+    if(uGatherProgress > 0.001){
+      vec2 targetWorld = uTargetPos * uScale;
+      float prog = clamp(uGatherProgress, 0.0, 0.9999);
+      vec2 s = (p - targetWorld * prog) / (1.0 - prog);
+      vec2 s_cell = floor(s * gridVec) / gridVec;
+      vec2 s_new = s_cell + (targetWorld - s_cell) * prog;
+      vec2 cellCenter = s_cell + 0.5 / gridVec;
+      p = cellCenter + (p - s_new);
+    }
+
     vec3 col = getColor(p);
 
     if(uChromaticAberration != 0.0){
@@ -219,6 +236,16 @@ function hexToRgb(hex) {
   return [((num >> 16) & 255) / 255, ((num >> 8) & 255) / 255, (num & 255) / 255];
 }
 
+const GATHER_DURATION_MS = 1100;
+
+function easeOutCubic(t) {
+  return 1 - Math.pow(1 - t, 3);
+}
+
+function easeInOutCubic(t) {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
+
 export default function FaultyTerminal({
   scale = 1,
   gridMul = [2, 1],
@@ -237,6 +264,11 @@ export default function FaultyTerminal({
   mouseStrength = 0.2,
   pageLoadAnimation = true,
   brightness = 1,
+  transitionRequested = false,
+  transitionTarget = null,
+  onTransitionComplete,
+  zoomBackRequested = false,
+  onZoomBackComplete,
   className,
   style,
   ...rest
@@ -250,6 +282,18 @@ export default function FaultyTerminal({
   const rafRef = useRef(0);
   const loadAnimationStartRef = useRef(0);
   const timeOffsetRef = useRef(Math.random() * 100);
+  const transitionStartRef = useRef(0);
+  const transitionRequestedRef = useRef(false);
+  const transitionTargetRef = useRef(null);
+  const zoomBackStartRef = useRef(-1);
+  const zoomBackRequestedRef = useRef(false);
+  const onTransitionCompleteRef = useRef(onTransitionComplete);
+  const onZoomBackCompleteRef = useRef(onZoomBackComplete);
+  onTransitionCompleteRef.current = onTransitionComplete;
+  onZoomBackCompleteRef.current = onZoomBackComplete;
+  transitionRequestedRef.current = transitionRequested;
+  transitionTargetRef.current = transitionTarget;
+  zoomBackRequestedRef.current = zoomBackRequested;
 
   const tintVec = useMemo(() => hexToRgb(tint), [tint]);
   const ditherValue = useMemo(() => (typeof dither === 'boolean' ? (dither ? 1 : 0) : dither), [dither]);
@@ -294,7 +338,9 @@ export default function FaultyTerminal({
         uUseMouse: { value: mouseReact ? 1 : 0 },
         uPageLoadProgress: { value: pageLoadAnimation ? 0 : 1 },
         uUsePageLoadAnimation: { value: pageLoadAnimation ? 1 : 0 },
-        uBrightness: { value: brightness }
+        uBrightness: { value: brightness },
+        uGatherProgress: { value: 0 },
+        uTargetPos: { value: new Float32Array([0.5, 0.5]) }
       }
     });
     programRef.current = program;
@@ -352,6 +398,47 @@ export default function FaultyTerminal({
         const mouseUniform = program.uniforms.uMouse.value;
         mouseUniform[0] = smoothMouse.x;
         mouseUniform[1] = smoothMouse.y;
+      }
+
+      if (zoomBackRequestedRef.current && zoomBackStartRef.current >= 0) {
+        const target = transitionTargetRef.current;
+        if (target && target.x != null && target.y != null) {
+          const tu = program.uniforms.uTargetPos.value;
+          tu[0] = target.x;
+          tu[1] = target.y;
+        }
+        if (zoomBackStartRef.current === 0) zoomBackStartRef.current = t;
+        const elapsed = t - zoomBackStartRef.current;
+        if (elapsed < GATHER_DURATION_MS) {
+          const tNorm = elapsed / GATHER_DURATION_MS;
+          program.uniforms.uGatherProgress.value = 1 - easeOutCubic(tNorm);
+        } else {
+          program.uniforms.uGatherProgress.value = 0;
+          zoomBackStartRef.current = -1;
+          onZoomBackCompleteRef.current?.();
+        }
+      } else if (transitionRequestedRef.current && transitionStartRef.current >= 0) {
+        const target = transitionTargetRef.current;
+        if (target && target.x != null && target.y != null) {
+          const tu = program.uniforms.uTargetPos.value;
+          tu[0] = target.x;
+          tu[1] = target.y;
+        }
+        if (transitionStartRef.current === 0) transitionStartRef.current = t;
+        const elapsed = t - transitionStartRef.current;
+        if (elapsed < GATHER_DURATION_MS) {
+          const gatherT = elapsed / GATHER_DURATION_MS;
+          program.uniforms.uGatherProgress.value = easeOutCubic(gatherT);
+        } else {
+          program.uniforms.uGatherProgress.value = 1;
+          transitionStartRef.current = -1;
+          onTransitionCompleteRef.current?.();
+        }
+      } else if (!transitionRequestedRef.current) {
+        transitionStartRef.current = 0;
+      }
+      if (!zoomBackRequestedRef.current) {
+        zoomBackStartRef.current = 0;
       }
 
       renderer.render({ scene: mesh });

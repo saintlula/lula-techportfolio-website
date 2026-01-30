@@ -297,10 +297,20 @@ const Shuffle = ({
         setReady(true);
       };
 
+      if (!triggerOnce) {
+        /* Hover / no-scroll case: run animation immediately so text switches (e.g. CLICK → RESUME) work */
+        create();
+        return () => {
+          removeHover();
+          teardown();
+          setReady(false);
+        };
+      }
+
       const st = ScrollTrigger.create({
         trigger: el,
         start,
-        once: triggerOnce,
+        once: true,
         onEnter: create
       });
 

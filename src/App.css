@@ -1,4 +1,4 @@
-﻿@font-face {
+@font-face {
   font-family: 'AerojonesNF';
   src: url('./assets/fonts/AerojonesNF.ttf') format('truetype');
   font-weight: normal;
@@ -12,15 +12,76 @@ html, body, #root {
   margin: 0;
 }
 
-/* Container holds background + centered text */
+/* Container: full screen, centers content */
 .app-container {
   width: 100vw;
   height: 100vh;
-  z-index: 1;
   position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
+  overflow: hidden;
+}
+
+/* Header: selected word moves from button position to top */
+.page-header {
+  position: fixed;
+  left: var(--start-x, 50%);
+  top: var(--start-y, 50%);
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  transition: left 0.7s ease-out, top 0.7s ease-out, transform 0.7s ease-out;
+  pointer-events: none;
+}
+
+.page-header--at-top {
+  left: 50%;
+  top: 1.5rem;
+  transform: translate(-50%, 0);
+}
+
+/* When returning, header animates back to original position over same duration as zoom-back (1.1s) */
+.page-header--returning {
+  transition-duration: 1.1s;
+}
+
+/* Return button at bottom when on a zoomed page – black in zoomed-out state */
+.return-button {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  font-family: 'AerojonesNF', sans-serif;
+  font-size: clamp(1rem, 2.5vw, 1.25rem);
+  padding: 0.5rem 1.25rem;
+  background: transparent;
+  color: #7FAF7A;
+  border: 2px solid currentColor;
+  cursor: pointer;
+  transition: opacity 0.2s, color 0.2s;
+}
+
+.return-button--zoomed {
+  color: #000;
+  border-color: #000;
+}
+
+.return-button:hover {
+  opacity: 0.9;
+  color: #9bc997;
+}
+
+/* Higher specificity so zoomed hover wins: full white */
+.return-button.return-button--zoomed:hover {
+  opacity: 0.9;
+  color: #fff;
+  border-color: #fff;
+}
+
+.return-button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
 }
 
 /* Stack the three CLICK texts vertically */
@@ -36,8 +97,13 @@ html, body, #root {
   padding: 0 1rem; /* small padding for very small screens */
 }
 
+/* Button labels (ABOUT, RESUME, COVER) and header use same font as Return button */
+.click-stack .shuffle-parent,
+.page-header .shuffle-parent {
+  font-family: 'AerojonesNF', sans-serif;
+}
+
 .shuffle-parent {
-  font-family: 'AerojonesNF', sans-serif; 
   font-size: clamp(2.5rem, 5vw, 4rem); /* responsive and smaller max */
   text-align: center;
   line-height: 1.1; /* tighten spacing */
