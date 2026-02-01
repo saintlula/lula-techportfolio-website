@@ -191,7 +191,7 @@ html, body, #root {
   padding: 0.75rem clamp(1rem, 4vw, 2rem);
   background: linear-gradient(to top, rgba(220, 100, 40, 0.92), rgba(220, 100, 40, 0.85));
   color: #fff;
-  font-family: 'AerojonesNF', 'Consolas', 'Monaco', monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: clamp(0.7rem, 1.5vw, 0.85rem);
   letter-spacing: 0.03em;
   transition: transform 0.5s ease-out;

@@ -245,18 +245,18 @@ function App() {
       >
         <div className="app-footer__inner">
           <span className="app-footer__item">
-            <span className="app-footer__label">email:</span>{' '}
+            <span className="app-footer__label">Email:</span>{' '}
             <a href="mailto:lulaworkau@gmail.com" className="app-footer__link">lulaworkau@gmail.com</a>
           </span>
           <span className="app-footer__separator" aria-hidden="true">·</span>
           <span className="app-footer__item">
-            <span className="app-footer__label">github:</span>{' '}
+            <span className="app-footer__label">GitHub:</span>{' '}
             <a href="https://github.com/saintlula" target="_blank" rel="noopener noreferrer" className="app-footer__link">saintlula</a>
           </span>
           <span className="app-footer__separator" aria-hidden="true">·</span>
           <span className="app-footer__item">Melbourne, Australia</span>
           <span className="app-footer__separator" aria-hidden="true">·</span>
-          <span className="app-footer__item app-footer__copyright">© 2O26</span>
+          <span className="app-footer__item app-footer__copyright">&copy; 2026 Ehlinaz DY </span>
         </div>
       </footer>
 
