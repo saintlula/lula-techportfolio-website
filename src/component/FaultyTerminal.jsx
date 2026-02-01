@@ -1,6 +1,34 @@
+/**
+ * FaultyTerminal.jsx — Full-screen WebGL "faulty terminal" background
+ *
+ * Renders a full-screen shader that looks like a glitchy, scanline CRT with a
+ * grid of digit-like cells that react to time, mouse, and a "zoom" transition.
+ *
+ * Behaviour:
+ * - On load: optional cell-by-cell fade-in (pageLoadAnimation).
+ * - Mouse: optional glow/ripple around cursor (mouseReact, mouseStrength).
+ * - Zoom: when App sets transitionRequested + transitionTarget, the shader
+ *   zooms toward that point (uGatherProgress 0 → 1 over 1.1s). When App sets
+ *   zoomBackRequested, it zooms back (uGatherProgress 1 → 0) and calls
+ *   onZoomBackComplete when done.
+ *
+ * Performance:
+ * - Renders at 88% resolution then scales canvas to full size (fewer pixels).
+ * - DPR capped at 1.5. Antialiasing off.
+ * - When the tab is hidden (Page Visibility API), the loop runs at ~10 fps
+ *   instead of 60 fps. Resize is throttled.
+ */
+
 import { Renderer, Program, Mesh, Color, Triangle } from 'ogl';
 import { useEffect, useRef, useMemo, useCallback } from 'react';
 import './FaultyTerminal.css';
+
+/* -----------------------------------------------------------------------------
+   Vertex shader
+   -----------------------------------------------------------------------------
+   Draws a full-screen triangle; passes through UVs (0–1) for the fragment shader.
+   No transforms; the fragment shader does all the work in UV space.
+   ----------------------------------------------------------------------------- */
 
 const vertexShader = `
 attribute vec2 position;
@@ -11,6 +39,19 @@ void main() {
   gl_Position = vec4(position, 0.0, 1.0);
 }
 `;
+
+/* -----------------------------------------------------------------------------
+   Fragment shader (GLSL)
+   -----------------------------------------------------------------------------
+   For each pixel:
+   1. Transforms UV (optionally barrel distortion).
+   2. When zooming (uGatherProgress > 0), warps UV and mouse so the "gather"
+      effect is centered on the click point and stays in sync.
+   3. Computes a "digit" grid: each cell's brightness comes from pattern()
+      (FBM noise) plus optional mouse glow and optional page-load fade.
+   4. Adds scanlines, horizontal displacement (glitch), and optional chromatic
+      aberration, tint, dither.
+   ----------------------------------------------------------------------------- */
 
 const fragmentShader = `
 precision mediump float;
@@ -41,8 +82,8 @@ uniform float uGatherProgress;
 uniform vec2  uTargetPos;
 
 float time;
-float grainTime; /* used for grain/scanlines; slow when zoomed out, normal on main screen */
-vec2 mouseSamplingPos; /* mouse in same space as p (transformed when zoomed) for sync */
+float grainTime;
+vec2 mouseSamplingPos;
 
 float hash21(vec2 p){
   p = fract(p * 234.56);
@@ -185,7 +226,6 @@ vec2 barrel(vec2 uv){
 
 void main() {
     time = iTime * 0.333333;
-    /* Slower grain only when ZOOMED OUT (uGatherProgress > 0.5); main screen keeps original grain */
     grainTime = (uGatherProgress > 0.5) ? (iTime * 0.005) : time;
     vec2 uv = vUv;
 
@@ -198,14 +238,12 @@ void main() {
 
     if(uGatherProgress > 0.001){
       vec2 targetWorld = uTargetPos * uScale;
-      /* Cap zoom at halfway – slightly zoomed out, not full static */
       float prog = clamp(uGatherProgress, 0.0, 0.9999) * 0.58;
       vec2 s = (p - targetWorld * prog) / (1.0 - prog);
       vec2 s_cell = floor(s * gridVec) / gridVec;
       vec2 s_new = s_cell + (targetWorld - s_cell) * prog;
       vec2 cellCenter = s_cell + 0.5 / gridVec;
       p = cellCenter + (p - s_new);
-      /* Mouse in same space as p so hover effect stays in sync when zoomed */
       mouseSamplingPos = uMouse * uScale;
       vec2 s_m = (mouseSamplingPos - targetWorld * prog) / (1.0 - prog);
       vec2 s_cell_m = floor(s_m * gridVec) / gridVec;
@@ -236,6 +274,11 @@ void main() {
 }
 `;
 
+/* -----------------------------------------------------------------------------
+   Helpers
+   ----------------------------------------------------------------------------- */
+
+/** Converts a hex colour (e.g. "#7FAF7A") to [r, g, b] in 0–1 for the shader. */
 function hexToRgb(hex) {
   let h = hex.replace('#', '').trim();
   if (h.length === 3)
@@ -247,6 +290,7 @@ function hexToRgb(hex) {
   return [((num >> 16) & 255) / 255, ((num >> 8) & 255) / 255, (num & 255) / 255];
 }
 
+/** Duration in ms for both zoom-in and zoom-back transitions (must match App.css header return duration). */
 const GATHER_DURATION_MS = 1100;
 
 function easeOutCubic(t) {
@@ -256,6 +300,10 @@ function easeOutCubic(t) {
 function easeInOutCubic(t) {
   return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
+
+/* -----------------------------------------------------------------------------
+   Component
+   ----------------------------------------------------------------------------- */
 
 export default function FaultyTerminal({
   scale = 1,
@@ -284,6 +332,7 @@ export default function FaultyTerminal({
   style,
   ...rest
 }) {
+  /* Refs for WebGL and animation; we keep callback/request state in refs so the RAF loop always sees latest values without re-running the effect. */
   const containerRef = useRef(null);
   const programRef = useRef(null);
   const rendererRef = useRef(null);
@@ -298,6 +347,7 @@ export default function FaultyTerminal({
   const transitionTargetRef = useRef(null);
   const zoomBackStartRef = useRef(-1);
   const zoomBackRequestedRef = useRef(false);
+  const visibilityIntervalRef = useRef(null);
   const onTransitionCompleteRef = useRef(onTransitionComplete);
   const onZoomBackCompleteRef = useRef(onZoomBackComplete);
   onTransitionCompleteRef.current = onTransitionComplete;
@@ -309,6 +359,7 @@ export default function FaultyTerminal({
   const tintVec = useMemo(() => hexToRgb(tint), [tint]);
   const ditherValue = useMemo(() => (typeof dither === 'boolean' ? (dither ? 1 : 0) : dither), [dither]);
 
+  /** Writes current mouse position (0–1, origin bottom-left) into mouseRef for the RAF loop. */
   const handleMouseMove = useCallback(e => {
     const x = e.clientX / window.innerWidth;
     const y = 1 - e.clientY / window.innerHeight;
@@ -319,8 +370,8 @@ export default function FaultyTerminal({
     const ctn = containerRef.current;
     if (!ctn) return;
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const renderer = new Renderer({ dpr, antialias: true });
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    const renderer = new Renderer({ dpr, antialias: false });
     rendererRef.current = renderer;
     const gl = renderer.gl;
     gl.clearColor(0, 0, 0, 1);
@@ -358,12 +409,21 @@ export default function FaultyTerminal({
 
     const mesh = new Mesh(gl, { geometry, program });
 
+    /* Render at 88% of window size, then set canvas display size to full window so we draw fewer pixels. */
+    const RESOLUTION_SCALE = 0.88;
     const resize = () => {
       const w = window.innerWidth;
       const h = window.innerHeight;
+      const rw = Math.ceil(w * RESOLUTION_SCALE);
+      const rh = Math.ceil(h * RESOLUTION_SCALE);
 
-      renderer.setSize(w, h);
+      renderer.setSize(rw, rh);
       renderer.dpr = dpr;
+      const canvas = gl.canvas;
+      if (canvas.style) {
+        canvas.style.width = w + 'px';
+        canvas.style.height = h + 'px';
+      }
 
       program.uniforms.iResolution.value.set(w, h, w / h);
 
@@ -375,10 +435,24 @@ export default function FaultyTerminal({
     };
 
     resize();
-    window.addEventListener('resize', resize);
+    let resizeTick = 0;
+    const throttledResize = () => {
+      const t = performance.now();
+      if (t - resizeTick < 120) return;
+      resizeTick = t;
+      resize();
+    };
+    window.addEventListener('resize', throttledResize);
 
+    /**
+     * Main loop: updates time, page-load progress, mouse smoothing, zoom/zoom-back state, then renders.
+     * When the tab is hidden we don't schedule the next RAF; the visibility interval calls update every 100ms instead.
+     */
     const update = t => {
-      rafRef.current = requestAnimationFrame(update);
+      rafRef.current = 0;
+      if (typeof document !== 'undefined' && !document.hidden) {
+        rafRef.current = requestAnimationFrame(update);
+      }
 
       if (pageLoadAnimation && loadAnimationStartRef.current === 0) {
         loadAnimationStartRef.current = t;
@@ -411,6 +485,7 @@ export default function FaultyTerminal({
         mouseUniform[1] = smoothMouse.y;
       }
 
+      /* Zoom-back: uGatherProgress goes from 1 to 0 over GATHER_DURATION_MS; then we call onZoomBackComplete. */
       if (zoomBackRequestedRef.current && zoomBackStartRef.current >= 0) {
         const target = transitionTargetRef.current;
         if (target && target.x != null && target.y != null) {
@@ -429,6 +504,7 @@ export default function FaultyTerminal({
           onZoomBackCompleteRef.current?.();
         }
       } else if (transitionRequestedRef.current && transitionStartRef.current >= 0) {
+        /* Zoom-in: uGatherProgress goes from 0 to 1; then we call onTransitionComplete. */
         const target = transitionTargetRef.current;
         if (target && target.x != null && target.y != null) {
           const tu = program.uniforms.uTargetPos.value;
@@ -455,15 +531,35 @@ export default function FaultyTerminal({
       renderer.render({ scene: mesh });
     };
 
+    /** When tab is hidden we switch to a 100ms interval instead of RAF to save CPU/GPU; when visible again we resume RAF. */
+    const onVisibilityChange = () => {
+      if (document.hidden) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = 0;
+        if (!visibilityIntervalRef.current) {
+          visibilityIntervalRef.current = setInterval(() => update(performance.now()), 100);
+        }
+      } else {
+        if (visibilityIntervalRef.current) {
+          clearInterval(visibilityIntervalRef.current);
+          visibilityIntervalRef.current = null;
+        }
+        rafRef.current = requestAnimationFrame(update);
+      }
+    };
+
     rafRef.current = requestAnimationFrame(update);
     ctn.appendChild(gl.canvas);
 
-    if (mouseReact) window.addEventListener('mousemove', handleMouseMove);
+    if (mouseReact) window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    document.addEventListener('visibilitychange', onVisibilityChange);
 
     return () => {
       cancelAnimationFrame(rafRef.current);
-      window.removeEventListener('resize', resize);
+      if (visibilityIntervalRef.current) clearInterval(visibilityIntervalRef.current);
+      window.removeEventListener('resize', throttledResize);
       window.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
 
       if (process.env.NODE_ENV === 'production') {
         gl.getExtension('WEBGL_lose_context')?.loseContext();

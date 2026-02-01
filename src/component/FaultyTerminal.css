@@ -1,9 +1,29 @@
+/**
+ * FaultyTerminal.css — Container for the WebGL terminal canvas
+ *
+ * The FaultyTerminal component renders a full-screen WebGL canvas inside this div.
+ * These styles ensure the canvas covers the viewport and doesn't affect layout
+ * of the rest of the app (pointer-events: none so clicks pass through to
+ * buttons/labels). Performance hints (contain, transform) help the browser
+ * optimize rendering.
+ */
+
+/* Full-screen container; z-index 0 keeps it behind header, PageContent, and Return button. */
 .faulty-terminal-container {
   position: fixed;
   inset: 0;
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  pointer-events: none;
+  pointer-events: none; /* Clicks go through to the click-stack and Return button */
   z-index: 0;
+  contain: layout style paint; /* Limit layout/paint to this subtree for performance */
+  transform: translateZ(0); /* Promote to own compositor layer (GPU) */
+}
+
+/* Canvas: block removes inline gap; max-width/height prevent overflow if resize is odd. */
+.faulty-terminal-container canvas {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
 }

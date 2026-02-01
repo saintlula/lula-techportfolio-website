@@ -1,4 +1,18 @@
-/* Page content: terminal-style panel, sits below header when a page is selected */
+/**
+ * PageContent.css — Styles for the terminal-style content panel (About / Resume / Cover)
+ *
+ * The panel is a dark, semi-transparent box with a green border and text,
+ * a fake title bar (dots + label), a scanline overlay, and a blinking cursor.
+ * It is centered on the screen and slides right + fades out when the user
+ * clicks "Return" (class .page-content--returning), in sync with the 1.1s
+ * zoom-back and header animation.
+ */
+
+/* ==========================================================================
+   Page content wrapper (positioning)
+   ========================================================================== */
+
+/* Centered on screen; z-index 2 so it sits above FaultyTerminal. pointer-events: none so clicks pass through (e.g. to Return button). */
 .page-content {
   position: fixed;
   left: 50%;
@@ -9,16 +23,21 @@
   max-width: 32rem;
   padding: 0 1rem;
   pointer-events: none;
-  margin-top: 2rem; /* nudge down so header doesn't overlap */
+  margin-top: 2rem;
   transition: transform 1.1s ease-out, opacity 1.1s ease-out;
 }
 
-/* When Return is clicked: slide right and fade out in sync with header/zoom (1.1s) */
+/* When Return is clicked, App adds this class; panel slides right off screen and fades out in 1.1s (same as zoom-back and header). */
 .page-content--returning {
   transform: translate(100vw, -50%);
   opacity: 0;
 }
 
+/* ==========================================================================
+   Panel (the terminal window box)
+   ========================================================================== */
+
+/* Dark box with green border and inner shadow. Enters with a short fade + slide down (animation below). */
 .page-content__panel {
   background: rgba(0, 0, 0, 0.75);
   border: 1px solid rgba(127, 175, 122, 0.5);
@@ -32,6 +51,7 @@
   animation: page-content-panel-in 0.45s ease-out 0.25s both;
 }
 
+/* Entrance: panel fades in and moves down 8px so it doesn't just pop in. */
 @keyframes page-content-panel-in {
   from {
     opacity: 0;
@@ -43,7 +63,11 @@
   }
 }
 
-/* Fake title bar */
+/* ==========================================================================
+   Title bar (fake window chrome)
+   ========================================================================== */
+
+/* Row of dots + label; dark background and green-accent border below. */
 .page-content__title-bar {
   display: flex;
   align-items: center;
@@ -53,6 +77,7 @@
   border-bottom: 1px solid rgba(127, 175, 122, 0.3);
 }
 
+/* The three "traffic light" style dots in the title bar. */
 .page-content__title-dot {
   width: 8px;
   height: 8px;
@@ -61,6 +86,7 @@
   box-shadow: 0 0 6px rgba(127, 175, 122, 0.3);
 }
 
+/* The label text (e.g. "ABOUT.txt") next to the dots. */
 .page-content__title-label {
   margin-left: 8px;
   font-family: 'AerojonesNF', monospace;
@@ -69,7 +95,11 @@
   color: rgba(127, 175, 122, 0.8);
 }
 
-/* Subtle scanline overlay */
+/* ==========================================================================
+   Scanline overlay
+   ========================================================================== */
+
+/* Repeating horizontal dark lines over the panel for a CRT look. Doesn't block clicks (pointer-events: none). */
 .page-content__scanline {
   position: absolute;
   inset: 0;
@@ -84,6 +114,11 @@
   border-radius: 6px;
 }
 
+/* ==========================================================================
+   Body (terminal text)
+   ========================================================================== */
+
+/* Monospace text area; green colour and light glow to match the site theme. */
 .page-content__body {
   position: relative;
   padding: 1rem 1.25rem 1.25rem;
@@ -98,21 +133,28 @@
   margin: 0;
 }
 
+/* Prompt lines (e.g. "> Resume"): brighter green. */
 .page-content__line--prompt {
   color: rgba(127, 175, 122, 0.95);
 }
 
+/* Output lines: slightly lighter/softer green, indented. */
 .page-content__line--output {
   color: rgba(200, 220, 195, 0.9);
   padding-left: 0.5rem;
 }
 
+/* Directory-style lines (e.g. "skills/  projects/"): same green family, indented. (Haven't used this yet') */
 .page-content__line--dir {
   color: rgba(127, 175, 122, 0.85);
   padding-left: 0.5rem;
 }
 
-/* Blinking cursor */
+/* ==========================================================================
+   Blinking cursor
+   ========================================================================== */
+
+/* Cursor at end of the last line; blinks every 1s (opacity 0 at 50%). */
 .page-content__cursor {
   display: inline-block;
   width: 0.55em;
