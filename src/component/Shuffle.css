@@ -1,17 +1,32 @@
+/**
+ * Shuffle.css — Styles for the Shuffle text animation component
+ *
+ * The Shuffle component renders the text inside an element with class
+ * .shuffle-parent. Before GSAP is ready the text is hidden (visibility: hidden)
+ * so we don't see a flash of un-split text; when ready we add .is-ready and
+ * make it visible. The actual character wrappers and strips are created by
+ * GSAP SplitText and our build() in Shuffle.jsx; these classes support that
+ * structure (shuffle-char, etc.) and the visual style (outline, shadow).
+ */
+
+/* ==========================================================================
+   Shuffle parent (the visible text container)
+   ========================================================================== */
+
+/* Container for the text. Hidden until GSAP has built so we don't see a flash of plain text. */
 .shuffle-parent {
   display: inline-block;
   white-space: normal;
   word-wrap: break-word;
   will-change: transform;
-  line-height: 1.1; /* slightly taller to avoid overlap */
-  font-size: inherit; /* take font-size from parent */
+  line-height: 1.1;
+  font-size: inherit;
   font-family: 'Press Start 2P', sans-serif;
   text-transform: uppercase;
   visibility: hidden;
   color: #f5f1ea;
 
-
-  /*word backing*/
+  /* Thick black outline in 8 directions so text stays readable on any background (terminal, etc.) */
   text-shadow:
     3px 0px 0px #000,
    -3px 0px 0px #000,
@@ -23,14 +38,19 @@
     3px -3px 0px #000,
    -3px -3px 0px #000,
 
-    /* outer soft support */
     0px 0px 14px rgba(0, 0, 0, 0.7);
 }
 
+/* Once GSAP has built and we've set ready=true, we show the text. */
 .shuffle-parent.is-ready {
   visibility: visible;
 }
 
+/* ==========================================================================
+   GSAP SplitText structure (chars / wrappers)
+   ========================================================================== */
+
+/* Wrapper around each character (created by our build(), not SplitText directly). Hides overflow so the sliding strip only shows one char at a time. */
 .shuffle-char-wrapper {
   display: inline-block;
   overflow: hidden;
@@ -38,11 +58,13 @@
   position: relative;
 }
 
+/* Inner strip that we animate with transform: translateX(); holds [copy, ...scramble, real] chars. */
 .shuffle-char-wrapper > span {
   display: inline-flex;
   will-change: transform;
 }
 
+/* Each character node from SplitText. */
 .shuffle-char {
   line-height: 1;
   display: inline-block;

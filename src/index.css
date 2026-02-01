@@ -1,18 +1,34 @@
+/**
+ * index.css — Global styles applied to the entire app
+ *
+ * These rules affect html, body, and default elements before any component CSS loads.
+ * They set baseline typography, colors, and layout so the app looks correct even
+ * before React has painted. Component-specific styles (App.css, etc.) override
+ * these where needed.
+ */
+
+/* ==========================================================================
+   Root and theme variables
+   ========================================================================== */
+
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
+  /* System light/dark preference; we use dark theme by default */
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #000; /* black background */
+  background-color: #000; /* Black background for the terminal-style site */
 
+  /* Prevent browser from synthesising bold/italic; use only loaded fonts */
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Default link styling (used if we add <a> tags elsewhere) */
 a {
   font-weight: 500;
   color: #646cff;
@@ -22,18 +38,21 @@ a:hover {
   color: #535bf2;
 }
 
+/* Body: full height, no margin, so the app can fill the viewport */
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  overflow: hidden; /* ensures canvas fills screen */
+  overflow: hidden; /* Prevents scrollbars; the canvas and UI fill the screen */
 }
 
+/* Default heading (if used) */
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
 }
 
+/* Default button reset (our .return-button in App.css overrides most of this) */
 button {
   border-radius: 8px;
   border: 1px solid transparent;
@@ -43,7 +62,11 @@ button {
   font-family: inherit;
 }
 
-/* Global sizing and layout */
+/* ==========================================================================
+   Global sizing and layout
+   ========================================================================== */
+
+/* Ensure html, body, and #root (the React mount point) take full viewport with no margin/padding/scroll */
 html, body, #root {
   margin: 0;
   padding: 0;
@@ -52,13 +75,17 @@ html, body, #root {
   overflow: hidden;
 }
 
+/* Body font and colors: AerojonesNF is loaded in App.css; black bg and white text as fallback if WebGL fails */
 body {
   font-family: 'AerojonesNF', system-ui, sans-serif;
-  background-color: #000; /* fallback if WebGL fails */
-  color: #fff; /* fallback text color */
+  background-color: #000;
+  color: #fff;
 }
 
-/* Buttons */
+/* ==========================================================================
+   Buttons (global defaults)
+   ========================================================================== */
+
 button {
   cursor: pointer;
   transition: border-color 0.25s;
@@ -71,7 +98,10 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
-/* Light mode overrides */
+/* ==========================================================================
+   Light mode overrides (when user OS prefers light theme)
+   ========================================================================== */
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
