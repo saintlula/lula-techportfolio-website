@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import FaultyTerminal from './component/FaultyTerminal';
 import Shuffle from './component/Shuffle';
+import PageContent from './component/PageContent';
 import './App.css';
 
 const WORD_LABELS = { about: 'ABOUT', resume: 'RESUME', cover: 'COVER' };
@@ -127,6 +128,7 @@ function App() {
           >
             <Shuffle text={WORD_LABELS[selectedWord]} loop={true} triggerOnce={false} />
           </header>
+          <PageContent page={selectedWord} isReturning={zoomBackRequested} />
           <button
             type="button"
             className="return-button return-button--zoomed"
