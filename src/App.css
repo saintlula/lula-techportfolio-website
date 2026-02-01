@@ -63,8 +63,8 @@ html, body, #root {
 }
 
 .return-button--zoomed {
-  color: #000;
-  border-color: #000;
+  color: #fff;
+  border-color: #fff;
 }
 
 .return-button:hover {
