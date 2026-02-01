@@ -15,11 +15,14 @@
  * passes callbacks so the UI (header, PageContent, Return button) stays in sync.
  */
 
-import { useState, useEffect, useCallback, memo } from 'react';
+import { useState, useEffect, useCallback, useRef, memo } from 'react';
 import FaultyTerminal from './component/FaultyTerminal';
 import Shuffle from './component/Shuffle';
 import PageContent from './component/PageContent';
 import './App.css';
+
+/** Small vertical gap (px) so we consider "clash" before actual overlap. */
+const OVERLAP_GAP = 8;
 
 /* Maps internal page keys to the label text shown in the header (e.g. selectedWord 'about' → 'ABOUT') */
 const WORD_LABELS = { about: 'ABOUT', resume: 'RESUME', cover: 'COVER' };
@@ -104,6 +107,12 @@ function App() {
   const [headerAtTop, setHeaderAtTop] = useState(false);
   /* True when user has clicked "Return"; tells FaultyTerminal to zoom back and triggers header/content exit animations */
   const [zoomBackRequested, setZoomBackRequested] = useState(false);
+  /* True when the content panel would overlap the header or Return button; header slides left, return slides right */
+  const [isCramped, setIsCramped] = useState(false);
+
+  const headerRef = useRef(null);
+  const returnRef = useRef(null);
+  const contentPanelRef = useRef(null);
 
   /* -------------------------------------------------------------------------
      Handlers: all wrapped in useCallback so child components (e.g. HoverShuffle)
@@ -136,6 +145,7 @@ function App() {
   /** Called when the user clicks "Return". Starts zoom-back and triggers header/content exit (CSS classes). */
   const handleReturnClick = useCallback(() => {
     setHeaderAtTop(false);
+    setIsCramped(false);
     setZoomBackRequested(true);
   }, []);
 
@@ -144,6 +154,21 @@ function App() {
     setZoomBackRequested(false);
     setSelectedWord(null);
     setTransitionTarget(null);
+    setIsCramped(false);
+  }, []);
+
+  /** Detect if the content panel overlaps the header or Return button; set isCramped so they slide to the sides. */
+  const checkOverlap = useCallback(() => {
+    const header = headerRef.current;
+    const returnBtn = returnRef.current;
+    const panel = contentPanelRef.current;
+    if (!header || !returnBtn || !panel) return;
+    const headerRect = header.getBoundingClientRect();
+    const returnRect = returnBtn.getBoundingClientRect();
+    const panelRect = panel.getBoundingClientRect();
+    const overlapsHeader = panelRect.top < headerRect.bottom + OVERLAP_GAP;
+    const overlapsReturn = panelRect.bottom > returnRect.top - OVERLAP_GAP;
+    setIsCramped(overlapsHeader || overlapsReturn);
   }, []);
 
   /* Stable per-page click handlers so HoverShuffle receives the same onClick reference and memo works. */
@@ -163,6 +188,28 @@ function App() {
     });
     return () => cancelAnimationFrame(t);
   }, [selectedWord]);
+
+  /**
+   * When a page is open and header is at top, detect if content panel overlaps header or Return.
+   * Run after panel entrance animation (~700ms) and on resize; only when zoom-back is not in progress.
+   */
+  useEffect(() => {
+    if (!selectedWord || !headerAtTop || zoomBackRequested) {
+      if (!selectedWord) setIsCramped(false);
+      return;
+    }
+    const runAfterLayout = () => {
+      const t = setTimeout(checkOverlap, 800);
+      return () => clearTimeout(t);
+    };
+    const cleanup = runAfterLayout();
+    const onResize = () => checkOverlap();
+    window.addEventListener('resize', onResize);
+    return () => {
+      cleanup?.();
+      window.removeEventListener('resize', onResize);
+    };
+  }, [selectedWord, headerAtTop, zoomBackRequested, checkOverlap]);
 
   return (
     <div className="app-container">
@@ -191,11 +238,34 @@ function App() {
         onZoomBackComplete={handleZoomBackComplete}
       />
 
+      {/* Footer: only visible on main screen; slides down when a section is opened, slides back up when Return is clicked. */}
+      <footer
+        className={`app-footer ${selectedWord && !zoomBackRequested ? 'app-footer--off-screen' : ''}`}
+        aria-label="Contact and location"
+      >
+        <div className="app-footer__inner">
+          <span className="app-footer__item">
+            <span className="app-footer__label">email:</span>{' '}
+            <a href="mailto:lulaworkau@gmail.com" className="app-footer__link">lulaworkau@gmail.com</a>
+          </span>
+          <span className="app-footer__separator" aria-hidden="true">·</span>
+          <span className="app-footer__item">
+            <span className="app-footer__label">github:</span>{' '}
+            <a href="https://github.com/saintlula" target="_blank" rel="noopener noreferrer" className="app-footer__link">saintlula</a>
+          </span>
+          <span className="app-footer__separator" aria-hidden="true">·</span>
+          <span className="app-footer__item">Melbourne, Australia</span>
+          <span className="app-footer__separator" aria-hidden="true">·</span>
+          <span className="app-footer__item app-footer__copyright">© 2O26</span>
+        </div>
+      </footer>
+
       {selectedWord ? (
         <>
-          {/* Header: shows the selected word (ABOUT/RESUME/COVER). Starts at the label position (--start-x/y) and moves to top when headerAtTop is true. */}
+          {/* Header: shows the selected word (ABOUT/RESUME/COVER). When cramped, slides left so content doesn't cover it. */}
           <header
-            className={`page-header ${headerAtTop ? 'page-header--at-top' : ''} ${zoomBackRequested ? 'page-header--returning' : ''}`}
+            ref={headerRef}
+            className={`page-header ${headerAtTop ? 'page-header--at-top' : ''} ${headerAtTop && isCramped ? 'page-header--cramped' : ''} ${zoomBackRequested ? 'page-header--returning' : ''}`}
             style={{
               '--start-x': transitionTarget ? `${transitionTarget.x * 100}%` : '50%',
               '--start-y': transitionTarget ? `${(1 - transitionTarget.y) * 100}%` : '50%'
@@ -203,11 +273,12 @@ function App() {
           >
             <Shuffle text={WORD_LABELS[selectedWord]} loop={true} triggerOnce={false} />
           </header>
-          {/* Terminal-style content panel for the selected page; slides right and fades out when isReturning is true. */}
-          <PageContent page={selectedWord} isReturning={zoomBackRequested} />
+          {/* Terminal-style content panel for the selected page; ref used to measure overlap with header/return. */}
+          <PageContent ref={contentPanelRef} page={selectedWord} isReturning={zoomBackRequested} />
           <button
+            ref={returnRef}
             type="button"
-            className="return-button return-button--zoomed"
+            className={`return-button return-button--zoomed ${isCramped ? 'return-button--cramped' : ''} ${zoomBackRequested ? 'return-button--hidden' : ''}`}
             onClick={handleReturnClick}
             aria-label="Return to main"
           >

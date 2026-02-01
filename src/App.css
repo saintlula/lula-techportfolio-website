@@ -67,6 +67,15 @@ html, body, #root {
   left: 50%;
   top: 1.5rem;
   transform: translate(-50%, 0);
+  transition-duration: 0.7s, 0.7s, 0.7s;
+}
+
+/* When content would overlap header/return (e.g. small viewport), header slides left smoothly. Only applied when at-top. */
+.page-header--at-top.page-header--cramped {
+  left: 1.5rem;
+  transform: translate(0, 0);
+  transition-duration: 0.45s, 0.45s, 0.45s;
+  transition-timing-function: ease-out;
 }
 
 /* When the user has clicked Return, the header animates back to the label position; this class makes that transition 1.1s to match the zoom-back. */
@@ -78,27 +87,41 @@ html, body, #root {
    Return button
    ========================================================================== */
 
-/* Shown at the bottom center when a page is selected. Default (non-zoomed) style is green border/text. */
+/* Shown at the bottom center when a page is selected. Uses right + transform so cramped slide animates smoothly. */
 .return-button {
   position: fixed;
   bottom: 1.5rem;
-  left: 50%;
-  transform: translateX(-50%);
+  right: 50%;
+  transform: translateX(50%);
   z-index: 2;
   font-family: 'AerojonesNF', sans-serif;
+  transition: opacity 0.2s, color 0.2s, right 0.45s ease-out, transform 0.45s ease-out;
   font-size: clamp(1rem, 2.5vw, 1.25rem);
   padding: 0.5rem 1.25rem;
   background: transparent;
   color: #7FAF7A;
   border: 2px solid currentColor;
   cursor: pointer;
-  transition: opacity 0.2s, color 0.2s;
+}
+
+/* When Return is clicked, hide immediately (no linger). */
+.return-button--hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.05s ease-out, visibility 0.05s ease-out;
 }
 
 /* On a zoomed page we always use this modifier so the button is white (visible on the terminal). */
 .return-button--zoomed {
   color: #fff;
   border-color: #fff;
+}
+
+/* When content would overlap, return button slides right smoothly (right + transform both transition). */
+.return-button--zoomed.return-button--cramped {
+  right: 1.5rem;
+  transform: translateX(0);
 }
 
 .return-button:hover {
@@ -152,4 +175,75 @@ html, body, #root {
   line-height: 1.1;
   display: block;
   word-wrap: break-word;
+}
+
+/* ==========================================================================
+   Footer (main screen only)
+   ========================================================================== */
+
+/* Fixed at bottom; bright orange so it's visible. Slides down off screen when ABOUT/COVER/RESUME is opened, slides back up when Return is clicked. */
+.app-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  padding: 0.75rem clamp(1rem, 4vw, 2rem);
+  background: linear-gradient(to top, rgba(220, 100, 40, 0.92), rgba(220, 100, 40, 0.85));
+  color: #fff;
+  font-family: 'AerojonesNF', 'Consolas', 'Monaco', monospace;
+  font-size: clamp(0.7rem, 1.5vw, 0.85rem);
+  letter-spacing: 0.03em;
+  transition: transform 0.5s ease-out;
+  pointer-events: auto;
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.2);
+}
+
+.app-footer--off-screen {
+  transform: translateY(100%);
+}
+
+.app-footer__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem 0.6rem;
+  max-width: 60rem;
+  margin: 0 auto;
+}
+
+.app-footer__item {
+  white-space: nowrap;
+}
+
+.app-footer__label {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.app-footer__link {
+  color: #fff;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+  transition: color 0.2s, border-color 0.2s, opacity 0.2s;
+}
+
+.app-footer__link:hover {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.9);
+  opacity: 0.95;
+}
+
+.app-footer__link:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.app-footer__separator {
+  color: rgba(255, 255, 255, 0.7);
+  user-select: none;
+}
+
+.app-footer__copyright {
+  color: rgba(255, 255, 255, 0.85);
 }
