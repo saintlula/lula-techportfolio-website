@@ -42,6 +42,7 @@ uniform vec2  uTargetPos;
 
 float time;
 float grainTime; /* used for grain/scanlines; slow when zoomed out, normal on main screen */
+vec2 mouseSamplingPos; /* mouse in same space as p (transformed when zoomed) for sync */
 
 float hash21(vec2 p){
   p = fract(p * 234.56);
@@ -102,7 +103,7 @@ float digit(vec2 p){
     float intensity = pattern(s * 0.1, q, r) * 1.3 - 0.03;
     
     if(uUseMouse > 0.5){
-        vec2 mouseWorld = uMouse * uScale;
+        vec2 mouseWorld = (uGatherProgress > 0.001) ? mouseSamplingPos : (uMouse * uScale);
         float distToMouse = distance(s, mouseWorld);
         float mouseInfluence = exp(-distToMouse * 8.0) * uMouseStrength * 10.0;
         intensity += mouseInfluence;
@@ -197,12 +198,22 @@ void main() {
 
     if(uGatherProgress > 0.001){
       vec2 targetWorld = uTargetPos * uScale;
-      float prog = clamp(uGatherProgress, 0.0, 0.9999);
+      /* Cap zoom at halfway – slightly zoomed out, not full static */
+      float prog = clamp(uGatherProgress, 0.0, 0.9999) * 0.58;
       vec2 s = (p - targetWorld * prog) / (1.0 - prog);
       vec2 s_cell = floor(s * gridVec) / gridVec;
       vec2 s_new = s_cell + (targetWorld - s_cell) * prog;
       vec2 cellCenter = s_cell + 0.5 / gridVec;
       p = cellCenter + (p - s_new);
+      /* Mouse in same space as p so hover effect stays in sync when zoomed */
+      mouseSamplingPos = uMouse * uScale;
+      vec2 s_m = (mouseSamplingPos - targetWorld * prog) / (1.0 - prog);
+      vec2 s_cell_m = floor(s_m * gridVec) / gridVec;
+      vec2 s_new_m = s_cell_m + (targetWorld - s_cell_m) * prog;
+      vec2 cellCenter_m = s_cell_m + 0.5 / gridVec;
+      mouseSamplingPos = cellCenter_m + (mouseSamplingPos - s_new_m);
+    } else {
+      mouseSamplingPos = uMouse * uScale;
     }
 
     vec3 col = getColor(p);
