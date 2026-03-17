@@ -21,6 +21,12 @@
   transform: translateZ(0); /* Promote to own compositor layer (GPU) */
 }
 
+@supports (height: 100dvh) {
+  .faulty-terminal-container {
+    height: 100dvh;
+  }
+}
+
 /* Canvas: block removes inline gap; max-width/height prevent overflow if resize is odd. */
 .faulty-terminal-container canvas {
   display: block;

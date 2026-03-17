@@ -26,6 +26,7 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
 }
 
 /* Default link styling (used if we add <a> tags elsewhere) */
@@ -73,6 +74,13 @@ html, body, #root {
   width: 100%;
   height: 100%;
   overflow: hidden;
+}
+
+/* Prefer dynamic viewport units on mobile browsers (address-bar safe). */
+@supports (height: 100dvh) {
+  html, body, #root {
+    height: 100dvh;
+  }
 }
 
 /* Body font and colors: AerojonesNF is loaded in App.css; black bg and white text as fallback if WebGL fails */

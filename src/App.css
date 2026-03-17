@@ -47,6 +47,13 @@ html, body, #root {
   contain: layout style;
 }
 
+/* Mobile browser address-bar safe height. */
+@supports (height: 100dvh) {
+  .app-container {
+    height: 100dvh;
+  }
+}
+
 /* ==========================================================================
    Page header (selected word: ABOUT / RESUME / COVER)
    ========================================================================== */
@@ -102,6 +109,58 @@ html, body, #root {
   color: #7FAF7A;
   border: 2px solid currentColor;
   cursor: pointer;
+}
+
+/* ------------------------------
+   Mobile-only fit & readability
+   (desktop visuals unchanged)
+   ------------------------------ */
+@media (max-width: 600px) {
+  .click-stack {
+    gap: 0.75rem;
+    max-height: 92%;
+  }
+
+  .shuffle-parent {
+    /* Keep the desktop feel, but prevent overflow on narrow screens. */
+    font-size: clamp(2.1rem, 10vw, 3.25rem);
+    letter-spacing: 0.01em;
+  }
+
+  .page-header--at-top.page-header--cramped {
+    left: 1rem;
+  }
+
+  .return-button {
+    padding: 0.45rem 1rem;
+  }
+
+  /* Respect safe areas (iOS notch/home indicator) on mobile only. */
+  @supports (padding: max(0px)) {
+    .page-header--at-top {
+      top: max(1.25rem, env(safe-area-inset-top));
+    }
+
+    .return-button {
+      bottom: max(1.25rem, env(safe-area-inset-bottom));
+    }
+
+    .app-footer {
+      padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+      padding-left: max(1rem, env(safe-area-inset-left));
+      padding-right: max(1rem, env(safe-area-inset-right));
+    }
+  }
+
+  .app-footer__item {
+    white-space: normal;
+    text-align: center;
+  }
+
+  /* Reduce visual noise on very small widths by dropping separators. */
+  .app-footer__separator {
+    display: none;
+  }
 }
 
 /* When Return is clicked, hide immediately (no linger). */
