@@ -19,6 +19,7 @@ import { useState, useEffect, useCallback, useRef, memo } from 'react';
 import FaultyTerminal from './component/FaultyTerminal';
 import Shuffle from './component/Shuffle';
 import PageContent from './component/PageContent';
+import OceanBlue from './component/OceanBlue';
 import './App.css';
 
 /** Small vertical gap (px) so we consider "clash" before actual overlap. */
@@ -93,6 +94,8 @@ const HoverShuffle = memo(function HoverShuffle({ defaultText, hoverText, onClic
 });
 
 function App() {
+  const [siteVariant, setSiteVariant] = useState('terminal'); // 'terminal' | 'more'
+
   /* -------------------------------------------------------------------------
      State that drives the zoom and "page" view
      ------------------------------------------------------------------------- */
@@ -113,6 +116,24 @@ function App() {
   const headerRef = useRef(null);
   const returnRef = useRef(null);
   const contentPanelRef = useRef(null);
+
+  const resetTerminalUi = useCallback(() => {
+    setTransitionRequested(false);
+    setTransitionTarget(null);
+    setSelectedWord(null);
+    setHeaderAtTop(false);
+    setZoomBackRequested(false);
+    setIsCramped(false);
+  }, []);
+
+  const openMoreDesign = useCallback(() => {
+    resetTerminalUi();
+    setSiteVariant('more');
+  }, [resetTerminalUi]);
+
+  const closeMoreDesign = useCallback(() => {
+    setSiteVariant('terminal');
+  }, []);
 
   /* -------------------------------------------------------------------------
      Handlers: all wrapped in useCallback so child components (e.g. HoverShuffle)
@@ -195,7 +216,6 @@ function App() {
    */
   useEffect(() => {
     if (!selectedWord || !headerAtTop || zoomBackRequested) {
-      if (!selectedWord) setIsCramped(false);
       return;
     }
     const runAfterLayout = () => {
@@ -212,13 +232,16 @@ function App() {
   }, [selectedWord, headerAtTop, zoomBackRequested, checkOverlap]);
 
   return (
-    <div className="app-container">
+    <>
+      {siteVariant === 'more' && <OceanBlue onBack={closeMoreDesign} />}
+      <div className="app-container" style={siteVariant === 'more' ? { pointerEvents: 'none' } : undefined}>
       {/* Full-screen WebGL terminal; always mounted. It handles zoom and notifies us via callbacks. */}
       <FaultyTerminal
         scale={2.5}
         gridMul={FAULTY_TERMINAL_GRID_MUL}
         digitSize={1.2}
         timeScale={1}
+        pause={siteVariant === 'more'}
         scanlineIntensity={1}
         glitchAmount={1}
         flickerAmount={1}
@@ -287,13 +310,19 @@ function App() {
         </>
       ) : (
         /* Main view: three labels that switch to "CLICK" on hover and navigate on click. */
-        <div className="click-stack">
-          <HoverShuffle defaultText="ABOUT" hoverText="CLICK" onClick={handleAboutClick} />
-          <HoverShuffle defaultText="RESUME" hoverText="CLICK" onClick={handleResumeClick} />
-          <HoverShuffle defaultText="COVER" hoverText="CLICK" onClick={handleCoverClick} />
-        </div>
+        <>
+          <button type="button" className="more-portal-button" onClick={openMoreDesign} aria-label="Open alternate design">
+            But wait there&apos;s more!
+          </button>
+          <div className="click-stack">
+            <HoverShuffle defaultText="ABOUT" hoverText="CLICK" onClick={handleAboutClick} />
+            <HoverShuffle defaultText="RESUME" hoverText="CLICK" onClick={handleResumeClick} />
+            <HoverShuffle defaultText="COVER" hoverText="CLICK" onClick={handleCoverClick} />
+          </div>
+        </>
       )}
-    </div>
+      </div>
+    </>
   );
 }
 
