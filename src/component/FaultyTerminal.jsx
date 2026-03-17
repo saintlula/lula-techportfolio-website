@@ -297,10 +297,6 @@ function easeOutCubic(t) {
   return 1 - Math.pow(1 - t, 3);
 }
 
-function easeInOutCubic(t) {
-  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-}
-
 /* -----------------------------------------------------------------------------
    Component
    ----------------------------------------------------------------------------- */
@@ -340,8 +336,10 @@ export default function FaultyTerminal({
   const smoothMouseRef = useRef({ x: 0.5, y: 0.5 });
   const frozenTimeRef = useRef(0);
   const rafRef = useRef(0);
+  const pauseRef = useRef(pause);
+  const updateFnRef = useRef(null);
   const loadAnimationStartRef = useRef(0);
-  const timeOffsetRef = useRef(Math.random() * 100);
+  const timeOffsetRef = useRef(0);
   const transitionStartRef = useRef(0);
   const transitionRequestedRef = useRef(false);
   const transitionTargetRef = useRef(null);
@@ -350,11 +348,38 @@ export default function FaultyTerminal({
   const visibilityIntervalRef = useRef(null);
   const onTransitionCompleteRef = useRef(onTransitionComplete);
   const onZoomBackCompleteRef = useRef(onZoomBackComplete);
-  onTransitionCompleteRef.current = onTransitionComplete;
-  onZoomBackCompleteRef.current = onZoomBackComplete;
-  transitionRequestedRef.current = transitionRequested;
-  transitionTargetRef.current = transitionTarget;
-  zoomBackRequestedRef.current = zoomBackRequested;
+
+  useEffect(() => {
+    onTransitionCompleteRef.current = onTransitionComplete;
+  }, [onTransitionComplete]);
+
+  useEffect(() => {
+    onZoomBackCompleteRef.current = onZoomBackComplete;
+  }, [onZoomBackComplete]);
+
+  useEffect(() => {
+    transitionRequestedRef.current = transitionRequested;
+  }, [transitionRequested]);
+
+  useEffect(() => {
+    transitionTargetRef.current = transitionTarget;
+  }, [transitionTarget]);
+
+  useEffect(() => {
+    zoomBackRequestedRef.current = zoomBackRequested;
+  }, [zoomBackRequested]);
+
+  useEffect(() => {
+    pauseRef.current = pause;
+    if (pause) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = 0;
+    } else {
+      if (updateFnRef.current && rafRef.current === 0 && (typeof document === 'undefined' || !document.hidden)) {
+        rafRef.current = requestAnimationFrame(updateFnRef.current);
+      }
+    }
+  }, [pause]);
 
   const tintVec = useMemo(() => hexToRgb(tint), [tint]);
   const ditherValue = useMemo(() => (typeof dither === 'boolean' ? (dither ? 1 : 0) : dither), [dither]);
@@ -369,6 +394,10 @@ export default function FaultyTerminal({
   useEffect(() => {
     const ctn = containerRef.current;
     if (!ctn) return;
+
+    if (timeOffsetRef.current === 0) {
+      timeOffsetRef.current = Math.random() * 100 + 0.0001;
+    }
 
     const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     const renderer = new Renderer({ dpr, antialias: false });
@@ -462,8 +491,9 @@ export default function FaultyTerminal({
      * When the tab is hidden we don't schedule the next RAF; the visibility interval calls update every 100ms instead.
      */
     const update = t => {
+      updateFnRef.current = update;
       rafRef.current = 0;
-      if (typeof document !== 'undefined' && !document.hidden) {
+      if (typeof document !== 'undefined' && (!document.hidden && !pauseRef.current)) {
         rafRef.current = requestAnimationFrame(update);
       }
 
@@ -471,7 +501,7 @@ export default function FaultyTerminal({
         loadAnimationStartRef.current = t;
       }
 
-      if (!pause) {
+      if (!pauseRef.current) {
         const elapsed = (t * 0.001 + timeOffsetRef.current) * timeScale;
         program.uniforms.iTime.value = elapsed;
         frozenTimeRef.current = elapsed;
@@ -561,7 +591,13 @@ export default function FaultyTerminal({
       }
     };
 
-    rafRef.current = requestAnimationFrame(update);
+    updateFnRef.current = update;
+    if (!pauseRef.current) {
+      rafRef.current = requestAnimationFrame(update);
+    } else {
+      // Render one still frame while paused.
+      update(performance.now());
+    }
     ctn.appendChild(gl.canvas);
 
     if (mouseReact) window.addEventListener('mousemove', handleMouseMove, { passive: true });
@@ -574,12 +610,11 @@ export default function FaultyTerminal({
       window.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('visibilitychange', onVisibilityChange);
 
-      if (process.env.NODE_ENV === 'production') {
+      if (import.meta.env.PROD) {
         gl.getExtension('WEBGL_lose_context')?.loseContext();
       }
     };
   }, [
-    pause,
     timeScale,
     scale,
     gridMul,

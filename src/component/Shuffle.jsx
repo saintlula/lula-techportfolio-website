@@ -21,7 +21,7 @@
  * hover to re-run the shuffle on mouseenter.
  */
 
-import React, { useRef, useEffect, useState, useMemo, memo } from 'react';
+import React, { useRef, useEffect, useState, useMemo, memo, useId } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { SplitText as GSAPSplitText } from 'gsap/SplitText';
@@ -55,8 +55,12 @@ const Shuffle = memo(function Shuffle({
   respectReducedMotion = true,
   triggerOnHover = true
 }) {
-  const ref = useRef(null);
-  const [fontsLoaded, setFontsLoaded] = useState(false);
+  const elementId = useId();
+  const [fontsLoaded, setFontsLoaded] = useState(() => {
+    if (typeof document === 'undefined') return false;
+    if (!('fonts' in document)) return true;
+    return document.fonts.status === 'loaded';
+  });
   const [ready, setReady] = useState(false);
 
   const splitRef = useRef(null);
@@ -67,10 +71,9 @@ const Shuffle = memo(function Shuffle({
 
   /** Wait for fonts so SplitText measures correctly (widths of chars). */
   useEffect(() => {
-    if ('fonts' in document) {
-      if (document.fonts.status === 'loaded') setFontsLoaded(true);
-      else document.fonts.ready.then(() => setFontsLoaded(true));
-    } else setFontsLoaded(true);
+    if (!('fonts' in document)) return;
+    if (document.fonts.status === 'loaded') return;
+    document.fonts.ready.then(() => setFontsLoaded(true));
   }, []);
 
   /** ScrollTrigger "start" string (e.g. "top 90%") when triggerOnce is true. */
@@ -85,19 +88,19 @@ const Shuffle = memo(function Shuffle({
 
   useGSAP(
     () => {
-      if (!ref.current || !text || !fontsLoaded) return;
+      const el = document.getElementById(elementId);
+      if (!el || !text || !fontsLoaded) return;
       if (respectReducedMotion && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
         setReady(true);
         onShuffleComplete?.();
         return;
       }
 
-      const el = ref.current;
       const start = scrollTriggerStart;
 
       const removeHover = () => {
-        if (hoverHandlerRef.current && ref.current) {
-          ref.current.removeEventListener('mouseenter', hoverHandlerRef.current);
+        if (hoverHandlerRef.current) {
+          el.removeEventListener('mouseenter', hoverHandlerRef.current);
           hoverHandlerRef.current = null;
         }
       };
@@ -319,7 +322,7 @@ const Shuffle = memo(function Shuffle({
 
       /** Add mouseenter listener to re-run build + play when user hovers (and we're not currently playing). */
       const armHover = () => {
-        if (!triggerOnHover || !ref.current) return;
+        if (!triggerOnHover) return;
         removeHover();
         const handler = () => {
           if (playingRef.current) return;
@@ -328,7 +331,7 @@ const Shuffle = memo(function Shuffle({
           play();
         };
         hoverHandlerRef.current = handler;
-        ref.current.addEventListener('mouseenter', handler);
+        el.addEventListener('mouseenter', handler);
       };
 
       /** Full setup: build DOM, (optional) randomize scramble chars, play timeline, arm hover, set ready so text is visible. */
@@ -386,7 +389,7 @@ const Shuffle = memo(function Shuffle({
         triggerOnHover,
         onShuffleComplete
       ],
-      scope: ref
+      scope: null
     }
   );
 
@@ -394,7 +397,7 @@ const Shuffle = memo(function Shuffle({
   const classes = useMemo(() => `shuffle-parent ${ready ? 'is-ready' : ''} ${className}`, [ready, className]);
 
   const Tag = tag || 'p';
-  return React.createElement(Tag, { ref, className: classes, style: commonStyle }, text);
+  return React.createElement(Tag, { id: elementId, className: classes, style: commonStyle }, text);
 });
 
 export default Shuffle;
