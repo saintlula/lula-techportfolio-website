@@ -50,9 +50,20 @@
 
 @media (max-width: 600px) {
   .page-content {
-    margin-top: 1.25rem;
+    /* Leave clear space for the header at the top (mobile). */
+    margin-top: 0;
+    top: 56%;
     max-width: 96vw;
     padding: 0 0.6rem;
+  }
+
+  @supports (height: 100dvh) {
+    .page-content {
+      max-height: calc(100dvh - 9.5rem);
+    }
+  }
+  .page-content {
+    max-height: calc(100vh - 9.5rem);
   }
 
   .page-content__title-bar {

@@ -41,6 +41,24 @@
     0px 0px 14px rgba(0, 0, 0, 0.7);
 }
 
+/* Mobile: keep outline, but reduce thickness so text stays sharp/legible. */
+@media (max-width: 600px) {
+  .shuffle-parent {
+    text-shadow:
+      2px 0px 0px #000,
+     -2px 0px 0px #000,
+      0px 2px 0px #000,
+      0px -2px 0px #000,
+
+      2px 2px 0px #000,
+     -2px 2px 0px #000,
+      2px -2px 0px #000,
+     -2px -2px 0px #000,
+
+      0px 0px 10px rgba(0, 0, 0, 0.75);
+  }
+}
+
 /* Once GSAP has built and we've set ready=true, we show the text. */
 .shuffle-parent.is-ready {
   visibility: visible;

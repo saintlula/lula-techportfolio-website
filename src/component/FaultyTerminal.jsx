@@ -409,13 +409,20 @@ export default function FaultyTerminal({
 
     const mesh = new Mesh(gl, { geometry, program });
 
-    /* Render at 88% of window size, then set canvas display size to full window so we draw fewer pixels. */
-    const RESOLUTION_SCALE = 0.88;
+    /* Render slightly below full res on desktop; on mobile prefer full res for smoother look. */
+    const isMobileViewport = () =>
+      typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(max-width: 600px)').matches;
+
     const resize = () => {
       const w = window.innerWidth;
       const h = window.innerHeight;
-      const rw = Math.ceil(w * RESOLUTION_SCALE);
-      const rh = Math.ceil(h * RESOLUTION_SCALE);
+      const portrait = h > w;
+      const mobile = isMobileViewport();
+      const resolutionScale = mobile ? 1 : 0.88;
+      const rw = Math.ceil(w * resolutionScale);
+      const rh = Math.ceil(h * resolutionScale);
 
       renderer.setSize(rw, rh);
       renderer.dpr = dpr;
@@ -427,9 +434,15 @@ export default function FaultyTerminal({
 
       program.uniforms.iResolution.value.set(w, h, w / h);
 
-      const referenceWidth = 1920;
-      const referenceHeight = 1080;
-      const scaleFactor = Math.min(w / referenceWidth, h / referenceHeight) * dpr;
+      /*
+        Scale tuning:
+        - Desktop uses a 1920x1080 reference.
+        - Mobile portrait uses a portrait reference so the pattern doesn't feel like a "compressed desktop".
+      */
+      const referenceWidth = mobile && portrait ? 1080 : 1920;
+      const referenceHeight = mobile && portrait ? 1920 : 1080;
+      let scaleFactor = Math.min(w / referenceWidth, h / referenceHeight) * dpr;
+      if (mobile) scaleFactor *= 1.1;
 
       program.uniforms.uScale.value = scale * scaleFactor;
     };
