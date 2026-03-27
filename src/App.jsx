@@ -96,6 +96,10 @@ const HoverShuffle = memo(function HoverShuffle({ defaultText, hoverText, onClic
 function App() {
   const [siteVariant, setSiteVariant] = useState('terminal'); // 'terminal' | 'more'
 
+  const emailAddress = 'lulaworkau@gmail.com';
+  const [showEmailPrompt, setShowEmailPrompt] = useState(false);
+  const [emailPromptMessage, setEmailPromptMessage] = useState('');
+
   /* -------------------------------------------------------------------------
      State that drives the zoom and "page" view
      ------------------------------------------------------------------------- */
@@ -116,6 +120,48 @@ function App() {
   const headerRef = useRef(null);
   const returnRef = useRef(null);
   const contentPanelRef = useRef(null);
+
+  const copyToClipboard = useCallback(async (value) => {
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(value);
+      } else {
+        throw new Error('Clipboard API unavailable');
+      }
+    } catch {
+      // Fallback for older browsers.
+      const textArea = document.createElement('textarea');
+      textArea.value = value;
+      textArea.setAttribute('readonly', '');
+      textArea.style.position = 'fixed';
+      textArea.style.opacity = '0';
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+    }
+  }, []);
+
+  const handleEmailLinkClick = useCallback((e) => {
+    e.preventDefault();
+    setEmailPromptMessage('');
+    setShowEmailPrompt(true);
+  }, []);
+
+  const handleCopyEmail = useCallback(async () => {
+    await copyToClipboard(emailAddress);
+    setEmailPromptMessage('Email copied to clipboard.');
+    window.setTimeout(() => {
+      setShowEmailPrompt(false);
+      setEmailPromptMessage('');
+    }, 900);
+  }, [copyToClipboard, emailAddress]);
+
+  const handleOpenEmailApp = useCallback(() => {
+    setShowEmailPrompt(false);
+    setEmailPromptMessage('');
+    window.location.href = `mailto:${emailAddress}`;
+  }, [emailAddress]);
 
   const resetTerminalUi = useCallback(() => {
     setTransitionRequested(false);
@@ -231,6 +277,25 @@ function App() {
     };
   }, [selectedWord, headerAtTop, zoomBackRequested, checkOverlap]);
 
+  useEffect(() => {
+    if (!showEmailPrompt) return;
+    const onKeyDown = (ev) => {
+      if (ev.key === 'Escape') {
+        setShowEmailPrompt(false);
+        setEmailPromptMessage('');
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [showEmailPrompt]);
+
+  useEffect(() => {
+    if (siteVariant === 'more' || selectedWord) {
+      setShowEmailPrompt(false);
+      setEmailPromptMessage('');
+    }
+  }, [siteVariant, selectedWord]);
+
   return (
     <>
       {siteVariant === 'more' && <OceanBlue onBack={closeMoreDesign} />}
@@ -269,7 +334,16 @@ function App() {
         <div className="app-footer__inner">
           <span className="app-footer__item">
             <span className="app-footer__label">Email:</span>{' '}
-            <a href="mailto:lulaworkau@gmail.com" className="app-footer__link">lulaworkau@gmail.com</a>
+            <button
+              type="button"
+              className="app-footer__link"
+              onClick={handleEmailLinkClick}
+              aria-haspopup="dialog"
+              aria-expanded={showEmailPrompt}
+              aria-controls="email-app-prompt"
+            >
+              {emailAddress}
+            </button>
           </span>
           <span className="app-footer__separator" aria-hidden="true">·</span>
           <span className="app-footer__item">
@@ -282,6 +356,45 @@ function App() {
           <span className="app-footer__item app-footer__copyright">&copy; 2026 Ehlinaz DY </span>
         </div>
       </footer>
+
+      <div
+        id="email-app-prompt"
+        className={`app-email-prompt ${showEmailPrompt ? 'is-open' : ''}`}
+        role="dialog"
+        aria-label="Email options"
+        aria-hidden={!showEmailPrompt}
+      >
+        <div className="app-email-prompt__title">
+          would you like to copy the email or would you like me to direct you to the email app?
+        </div>
+        <div className="app-email-prompt__actions">
+          <button
+            type="button"
+            className="app-email-prompt__btn app-email-prompt__btn--primary"
+            onClick={handleCopyEmail}
+          >
+            Copy Email
+          </button>
+          <button
+            type="button"
+            className="app-email-prompt__btn"
+            onClick={handleOpenEmailApp}
+          >
+            Open Email App
+          </button>
+          <button
+            type="button"
+            className="app-email-prompt__btn"
+            onClick={() => {
+              setShowEmailPrompt(false);
+              setEmailPromptMessage('');
+            }}
+          >
+            Close
+          </button>
+        </div>
+        {emailPromptMessage ? <div className="app-email-prompt__note">{emailPromptMessage}</div> : null}
+      </div>
 
       {selectedWord ? (
         <>

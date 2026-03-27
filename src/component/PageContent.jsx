@@ -24,11 +24,11 @@ import './PageContent.css';
 /* Lines shown on the About page. type 'prompt' = terminal prompt; 'output' = response text. */
 const ABOUT_LINES = [
   { type: 'prompt', text: '> About me and this webapp' },
-  { type: 'output', text: "First of all, thank you for taking the time to visit my website! My name is Ehlinaz, though I often go by Lula. I'm a recent university graduate with a background in software engineering and a genuine passion for building things." },
+  { type: 'output', text: "First of all, thank you for taking the time to visit my website! My name is Ehlinaz, though I often go by Lula. I'm a recent university graduate with a background in software engineering and a passion for building  (or trying to build) things." },
   { type: 'output', text: '' },
-  { type: 'output', text: "I created this site for a few reasons. First, because I believe portfolios should be more than a list of skills on a page. Anyone can say they can code and in the competitive job market I wanted to show it. Second, I wanted to make the hiring process more interesting, both for myself and for the people reviewing my work. I think that while resumes and cover letters are useful, they don't always show how someone thinks, and that part matters to me." },
+    { type: 'output', text: "I created this site for a few reasons however mainly because I believe portfolios should be more than a list of skills on a page. And because 'proficient in React' on a CV doesn't really tell you much. Especially not how someone thinks or codes, so I wanted to give a better look at that." },
   { type: 'output', text: '' },
-  { type: 'output', text: "This website itself is part of that process. It was built with the help of open-source tools, design inspiration from the React ecosystem, and a lot of time spent reading documentation written by developers who care deeply about their craft. I still enjoy going through docs, examples, and community resources because that's where I tend to learn best — not to mention it is always amazing to see how senior developers think and create." },
+  { type: 'output', text: "This website itself is part of that process. It was built with the help of open-source tools, design inspiration from the React ecosystem, and a lot of time spent reading documentation written by developers who care deeply about their craft." },
   { type: 'output', text: '' },
   { type: 'output', text: "More than anything, this page exists to show curiosity, intention, and growth. I'd like to say it's not about perfection, it's about momentum." }
 ];
@@ -36,11 +36,9 @@ const ABOUT_LINES = [
 /* Lines shown on the Cover page. */
 const COVER_LINES = [
   { type: 'prompt', text: '> Cover' },
-  { type: 'output', text: "I'm a software engineering graduate who enjoys building small, complete systems — from an idea to something people can actually use. Most of my experience comes from hands-on projects where I've worked with JavaScript and React Native to build mobile applications, connected APIs, and handled data with tools like Firestore and Google Maps." },
+    { type: 'output', text: "I'm a software engineering graduate with hands-on experience in JavaScript, React Native, and mobile development. I also have a background in C++, which gave me a solid foundation in how software works at a lower level, and I think that carries over into how I approach problems generally. I'm early in my career and still figuring out where I fit in the industry." },
   { type: 'output', text: '' },
-  { type: 'output', text: "My background includes experience with component-based development, state management, and building interfaces that are structured, readable, and maintainable. I also have experience in C++, which has given me a solid grounding in core programming concepts, memory management, and problem-solving at a lower level." },
-  { type: 'output', text: '' },
-  { type: 'output', text: "As a new graduate, I'm very aware that there is still a lot I don't know. What I try to bring instead is curiosity, persistence, and a genuine interest in understanding how things work. I'm comfortable reading documentation, learning unfamiliar tools, and asking good questions, and I enjoy the process of improving through iteration." },
+  { type: 'output', text: "And again as a new graduate, I'm very aware that there is still a lot I don't know. What I try to bring instead is curiosity, persistence, and a genuine interest in understanding how things work. I'm comfortable reading documentation, learning unfamiliar tools and I enjoy the process of improving through iteration." },
   { type: 'output', text: '' },
   { type: 'output', text: "This portfolio exists to hopefully show my approach more clearly than a traditional cover letter can. Rather than listing skills, I wanted to demonstrate how I think, how I learn, and how I translate ideas into working software." },
   { type: 'output', text: '' },
@@ -50,7 +48,7 @@ const COVER_LINES = [
 /* Lines shown on the Resume page. */
 const RESUME_LINES = [
   { type: 'prompt', text: '> Summary' },
-  { type: 'output', text: "I'm a Software Engineering graduate with experience building small applications, connecting APIs, and working on projects from idea to working prototype. I like figuring out how systems behave, improving things that don't work well, and learning new tools as I go. I speak both English and Turkish and I'm ready to step into a development team and keep growing." },
+  { type: 'output', text: "I wanted to include my resume in the website aswell, however if you would like to read it in PDF please scroll to the bottom as it is attached!" },
   { type: 'output', text: '' },
   { type: 'prompt', text: '> Skills' },
   { type: 'output', text: 'Languages & Frameworks: Java, C++, Python, JavaScript, HTML, CSS, SQL, React.js, React Native, Node.js' },
