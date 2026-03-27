@@ -333,8 +333,13 @@ html, body, #root {
 
 .app-footer__link {
   color: #fff;
+  background: transparent;
   text-decoration: none;
   border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
   transition: color 0.2s, border-color 0.2s, opacity 0.2s;
 }
 
@@ -347,6 +352,105 @@ html, body, #root {
 .app-footer__link:focus-visible {
   outline: 2px solid #fff;
   outline-offset: 2px;
+}
+
+/* ==========================================================================
+   Email prompt (bottom sheet)
+   ========================================================================== */
+.app-email-prompt {
+  position: fixed;
+  left: 50%;
+  bottom: calc(2.8rem + env(safe-area-inset-bottom, 0px));
+  transform: translate(-50%, 16px);
+  width: min(92vw, 460px);
+  z-index: 3; /* above footer */
+
+  background: linear-gradient(
+    to top,
+    rgba(220, 100, 40, 0.98),
+    rgba(220, 100, 40, 0.88)
+  );
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 14px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.25);
+  padding: 12px 12px 10px;
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.app-email-prompt.is-open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, 0);
+}
+
+.app-email-prompt__title {
+  color: rgba(255, 255, 255, 0.95);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.app-email-prompt__actions {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.app-email-prompt__btn {
+  appearance: none;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  cursor: pointer;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  padding: 7px 12px;
+  font-size: 0.76rem;
+  transition: background 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+}
+
+.app-email-prompt__btn:hover,
+.app-email-prompt__btn:focus-visible {
+  background: rgba(255, 255, 255, 0.25);
+  outline: none;
+}
+
+.app-email-prompt__btn--primary {
+  background: #fff;
+  border-color: #fff;
+  color: rgba(220, 100, 40, 0.95);
+}
+
+.app-email-prompt__btn--primary:hover,
+.app-email-prompt__btn--primary:focus-visible {
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.app-email-prompt__note {
+  margin-top: 8px;
+  color: rgba(255, 255, 255, 0.95);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-weight: 700;
+  font-size: 0.72rem;
+}
+
+@media (max-width: 600px) {
+  .app-email-prompt {
+    bottom: calc(2.5rem + env(safe-area-inset-bottom, 0px));
+    padding: 10px 10px 9px;
+  }
+
+  .app-email-prompt__title {
+    font-size: 0.76rem;
+  }
 }
 
 .app-footer__separator {
