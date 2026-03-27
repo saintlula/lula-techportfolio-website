@@ -8,6 +8,7 @@ export default function OceanBlue({ onBack }) {
   const [showEmailPrompt, setShowEmailPrompt] = useState(false);
   const [emailPromptMessage, setEmailPromptMessage] = useState('');
   const emailAddress = 'lulaworkau@gmail.com';
+  const [landingWord, setLandingWord] = useState('ABOUT');
 
   const pendingFlyRef = useRef(null); // { text, fromRect }
   const aboutTitleRef = useRef(null);
@@ -112,7 +113,18 @@ export default function OceanBlue({ onBack }) {
   const dir = transition?.dir;
 
   const showResume = screen === 'about' && !transition;
-  const showCover = screen === 'resume' && !transition;
+
+  useEffect(() => {
+    if (reducedMotion) return;
+    if (screen !== 'landing' || transition) return;
+
+    const delayMs = landingWord === 'ABOUT' ? 1000 : 700;
+    const t = window.setTimeout(() => {
+      setLandingWord(prev => (prev === 'ABOUT' ? 'CLICK' : 'ABOUT'));
+    }, delayMs);
+
+    return () => window.clearTimeout(t);
+  }, [landingWord, reducedMotion, screen, transition]);
 
   useEffect(() => {
     if (!transition) return;
@@ -168,9 +180,11 @@ export default function OceanBlue({ onBack }) {
             onToLanding={() => goTo('landing')}
             onToAbout={() => goTo('about')}
             onToResume={() => goTo('resume')}
+            onToCover={(fromEl) => goTo('cover', { text: 'COVER', fromEl })}
             aboutTitleRef={aboutTitleRef}
             resumeTitleRef={resumeTitleRef}
             coverTitleRef={coverTitleRef}
+            landingWord={landingWord}
           />
         </section>
 
@@ -186,9 +200,11 @@ export default function OceanBlue({ onBack }) {
               onToLanding={() => {}}
               onToAbout={() => {}}
               onToResume={() => {}}
+              onToCover={() => {}}
               aboutTitleRef={aboutTitleRef}
               resumeTitleRef={resumeTitleRef}
               coverTitleRef={coverTitleRef}
+              landingWord={landingWord}
             />
           </section>
         )}
@@ -197,22 +213,20 @@ export default function OceanBlue({ onBack }) {
       {showResume && (
         <button
           type="button"
-          className="more-design__nav more-design__nav--bottom more-design__transition-nav more-design__nav--about-resume"
+          className="more-design__nav more-design__nav--about-resume"
           onClick={(e) => goTo('resume', { text: 'RESUME', fromEl: e.currentTarget })}
+          aria-label="Resume"
         >
-          Resume
+          <span>R</span>
+          <span>E</span>
+          <span>S</span>
+          <span>U</span>
+          <span>M</span>
+          <span>E</span>
         </button>
       )}
 
-      {showCover && (
-        <button
-          type="button"
-          className="more-design__nav more-design__nav--bottom more-design__nav--blue more-design__transition-nav"
-          onClick={(e) => goTo('cover', { text: 'COVER', fromEl: e.currentTarget })}
-        >
-          Cover
-        </button>
-      )}
+      {/* COVER nav is rendered inside the RESUME screen */}
 
       {transition && fly && (
         <div
@@ -299,9 +313,11 @@ function ScreenView({
   onToLanding,
   onToAbout,
   onToResume,
+  onToCover,
   aboutTitleRef,
   resumeTitleRef,
-  coverTitleRef
+  coverTitleRef,
+  landingWord
 }) {
   if (screen === 'landing') {
     return (
@@ -312,7 +328,7 @@ function ScreenView({
           onClick={(e) => onAbout(e.currentTarget)}
           aria-label="Open about"
         >
-          ABOUT
+          {landingWord || 'ABOUT'}
         </button>
 
         <div className="more-design__hero-block" aria-hidden="true" />
@@ -344,6 +360,18 @@ function ScreenView({
       <div className="more-design__solid more-design__solid--amber" aria-label="Resume screen">
         <button type="button" className="more-design__arrow more-design__arrow--right more-design__arrow--blue" aria-label="Back to about" onClick={onToAbout}>
           →
+        </button>
+        <button
+          type="button"
+          className="more-design__nav more-design__nav--resume-cover"
+          onClick={(e) => onToCover(e.currentTarget)}
+          aria-label="Cover"
+        >
+          <span>C</span>
+          <span>O</span>
+          <span>V</span>
+          <span>E</span>
+          <span>R</span>
         </button>
         <div className="more-design__solid-inner">
           <div ref={resumeTitleRef} className="more-design__solid-title">RESUME</div>
