@@ -4,13 +4,11 @@ import './OceanBlue.css';
 export default function OceanBlue({ onBack }) {
   const [screen, setScreen] = useState('landing'); // landing | about | resume | cover
   const [transition, setTransition] = useState(null); // { from, to, dir }
-  const [fly, setFly] = useState(null); // { text, from: DOMRectLike, to: DOMRectLike }
   const [showEmailPrompt, setShowEmailPrompt] = useState(false);
   const [emailPromptMessage, setEmailPromptMessage] = useState('');
   const emailAddress = 'lulaworkau@gmail.com';
   const [landingWord, setLandingWord] = useState('ABOUT');
 
-  const pendingFlyRef = useRef(null); // { text, fromRect }
   const aboutTitleRef = useRef(null);
   const resumeTitleRef = useRef(null);
   const coverTitleRef = useRef(null);
@@ -38,17 +36,6 @@ export default function OceanBlue({ onBack }) {
       return;
     }
 
-    setFly(null);
-    if (opts?.text && opts?.fromEl) {
-      const r = opts.fromEl.getBoundingClientRect();
-      pendingFlyRef.current = {
-        text: opts.text,
-        fromRect: { left: r.left, top: r.top, width: r.width, height: r.height }
-      };
-    } else {
-      pendingFlyRef.current = null;
-    }
-
     setTransition({ from: screen, to, dir });
   }, [reducedMotion, screen, transition]);
 
@@ -62,7 +49,6 @@ export default function OceanBlue({ onBack }) {
     if (!transition) return;
     setScreen(transition.to);
     setTransition(null);
-    setFly(null);
   }, [transition]);
 
   useEffect(() => {
@@ -126,32 +112,7 @@ export default function OceanBlue({ onBack }) {
     return () => window.clearTimeout(t);
   }, [landingWord, reducedMotion, screen, transition]);
 
-  useEffect(() => {
-    if (!transition) return;
-    const pending = pendingFlyRef.current;
-    if (!pending) return;
-
-    const getTargetEl = () => {
-      if (transition.to === 'about') return aboutTitleRef.current;
-      if (transition.to === 'resume') return resumeTitleRef.current;
-      if (transition.to === 'cover') return coverTitleRef.current;
-      return null;
-    };
-
-    const tick = () => {
-      const targetEl = getTargetEl();
-      if (!targetEl) return;
-      const tr = targetEl.getBoundingClientRect();
-      setFly({
-        text: pending.text,
-        from: pending.fromRect,
-        to: { left: tr.left, top: tr.top, width: tr.width, height: tr.height }
-      });
-    };
-
-    const raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [transition]);
+  // Intentionally no "fly label" overlay during transitions.
 
   return (
     <div className="more-design" aria-label="Alternate design page">
@@ -227,22 +188,6 @@ export default function OceanBlue({ onBack }) {
       )}
 
       {/* COVER nav is rendered inside the RESUME screen */}
-
-      {transition && fly && (
-        <div
-          className="more-design__fly"
-          aria-hidden="true"
-          style={{
-            '--from-x': `${fly.from.left}px`,
-            '--from-y': `${fly.from.top}px`,
-            '--to-x': `${fly.to.left}px`,
-            '--to-y': `${fly.to.top}px`,
-            '--fly-scale': String(fly.from.width > 0 ? (fly.to.width / fly.from.width) : 1)
-          }}
-        >
-          {fly.text}
-        </div>
-      )}
 
       <footer className="more-design__footer" aria-label="Alternate design footer">
         <div className="more-design__footer-inner">

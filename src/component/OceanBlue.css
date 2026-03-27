@@ -1,8 +1,8 @@
 .more-design {
   position: fixed;
   inset: 0;
-  background: #f5efe6; /* cream base */
-  color: #0c2c66;
+  background: var(--md-cream, #f5efe6); /* cream base */
+  color: var(--md-blue-a, #0c2c66);
   z-index: 10;
   overflow: hidden;
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
@@ -67,7 +67,8 @@
   position: absolute;
   inset: 0;
   padding-top: 64px;
-  --md-blue-a: #0f56b3;
+  /* Theme colors (unified to match RESUME screen) */
+  --md-blue-a: #0c2c66;
   --md-cream: #f5efe6;
   --md-footer-h: clamp(44px, 7vh, 68px);
   padding-bottom: calc(var(--md-footer-h) + max(10px, env(safe-area-inset-bottom)));
@@ -106,14 +107,14 @@
   font-weight: 900;
   letter-spacing: -0.03em;
   line-height: 0.86;
-  color: #0f56b3;
+  color: var(--md-blue-a);
   font-size: clamp(4.6rem, 18vw, 12rem);
   position: relative;
   z-index: 1;
 }
 
 .more-design__bigword:focus-visible {
-  outline: 3px solid rgba(15, 86, 179, 0.35);
+  outline: 3px solid rgba(12, 44, 102, 0.35);
   outline-offset: 6px;
   border-radius: 12px;
 }
@@ -282,32 +283,6 @@
   text-decoration: none;
 }
 
-.more-design__fly {
-  position: fixed;
-  left: 0;
-  top: 0;
-  z-index: 6;
-  transform: translate3d(var(--from-x), var(--from-y), 0) scale(1);
-  pointer-events: none;
-  font-weight: 1000;
-  letter-spacing: -0.03em;
-  line-height: 0.9;
-  color: rgba(255, 255, 255, 0.95);
-  animation: md-fly var(--md-dur) var(--md-ease) forwards;
-  will-change: transform;
-}
-
-@keyframes md-fly {
-  from {
-    transform: translate3d(var(--from-x), var(--from-y), 0) scale(1);
-    opacity: 1;
-  }
-  to {
-    transform: translate3d(var(--to-x), var(--to-y), 0) scale(var(--fly-scale, 1));
-    opacity: 1;
-  }
-}
-
 .more-design__stage--dir-down .more-design__panel--active { animation: md-out-down var(--md-dur) var(--md-ease) forwards; }
 .more-design__stage--dir-down .more-design__panel--incoming { animation: md-in-down var(--md-dur) var(--md-ease) forwards; }
 .more-design__stage--dir-right .more-design__panel--active { animation: md-out-right var(--md-dur) var(--md-ease) forwards; }
@@ -472,7 +447,6 @@
 @media (prefers-reduced-motion: reduce) {
   .more-design__panel--active,
   .more-design__panel--incoming { animation: none !important; }
-  .more-design__fly { display: none; }
 }
 
 /* ------------------------------
