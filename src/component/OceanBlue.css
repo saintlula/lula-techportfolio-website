@@ -5,7 +5,6 @@
   position: fixed;
   inset: 0;
   background: var(--md-cream, #f5efe6);
-  /* cream base */
   color: var(--md-blue-a, #0c2c66);
   z-index: 10;
   overflow: hidden;
@@ -92,7 +91,7 @@
   position: absolute;
   inset: 0;
   padding-top: 64px;
-  /* Theme colors (unified to match RESUME screen) */
+  /* Local stage tokens + animation timing. */
   --md-blue-a: #0c2c66;
   --md-cream: #f5efe6;
   --md-footer-h: clamp(44px, 7vh, 68px);

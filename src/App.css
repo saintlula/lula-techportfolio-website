@@ -1,12 +1,14 @@
 /**
- * App.css — Layout and styles for the root app and page chrome
+ * App.css
  *
- * Covers:
- * - Font face for AerojonesNF (used for labels, header, Return button)
- * - Full-screen app container and main vs. "page" layout
- * - Header that moves from the clicked label position to the top
- * - Return button and click-stack (the three ABOUT/RESUME/COVER labels)
- * - Shared Shuffle text styling (font size, etc.)
+ * Main shell styles for the terminal experience:
+ * - viewport layout
+ * - home labels
+ * - floating header + return button
+ * - footer + prompts
+ * - style switch dropdown ("But wait there's more")
+ *
+ * Keeping comments practical so it's easier to tweak later.
  */
 
 /* ==========================================================================
@@ -27,7 +29,7 @@
    Global layout: app fills viewport
    ========================================================================== */
 
-/* Ensure html, body, and the React root div take full height with no margin so the app can be full-screen */
+/* Full-height app baseline so WebGL + overlays can fill the screen. */
 html,
 body,
 #root
@@ -40,7 +42,7 @@ body,
    App container
    ========================================================================== */
 
-/* Wraps FaultyTerminal + header/content or click-stack. Flex centers the content. contain limits layout recalc. */
+/* Main wrapper for terminal UI layers. */
 .app-container
 {
   width: 100vw;
@@ -53,7 +55,7 @@ body,
   contain: layout style;
 }
 
-/* Mobile browser address-bar safe height. */
+/* Better viewport sizing on mobile browsers with dynamic toolbars. */
 @supports (height: 100dvh)
 {
   .app-container
@@ -63,7 +65,7 @@ body,
 }
 
 /* ==========================================================================
-   Portal button (opens alternate design)
+   Style Switch Trigger + Dropdown
    ========================================================================== */
 
 .more-portal-button

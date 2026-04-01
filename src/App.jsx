@@ -1,18 +1,15 @@
 /**
- * App.jsx — Root component and navigation state
+ * App.jsx
  *
- * This file controls the entire app flow:
- * - Renders the full-screen FaultyTerminal (WebGL background) at all times
- * - When no page is selected: shows three clickable labels (ABOUT, RESUME, COVER) that
- *   switch to "CLICK" on hover
- * - When a label is clicked: the terminal zooms toward that label's position, the label
- *   text moves to the top as a header, the PageContent panel appears, and a "Return" button
- *   appears at the bottom
- * - When "Return" is clicked: the zoom reverses, the header and content slide back, and
- *   we return to the three-label view
+ * This is basically the "traffic controller" for the whole site.
+ * It decides:
+ * - when we're on the terminal style vs ocean blue style
+ * - when a section is selected (ABOUT / RESUME / COVER)
+ * - when to start zoom in / zoom out
+ * - when to show the overlay UI bits (header, return button, prompts, style menu)
  *
- * All zoom/transition timing is driven by FaultyTerminal; App only sets flags and
- * passes callbacks so the UI (header, PageContent, Return button) stays in sync.
+ * FaultyTerminal does the heavy visual zooming. This file mostly coordinates state
+ * so everything appears at the right time and feels synced.
  */
 
 import { useState, useEffect, useCallback, useRef, memo } from 'react';
@@ -22,17 +19,15 @@ import PageContent from './component/PageContent';
 import OceanBlue from './component/OceanBlue';
 import './App.css';
 
-/** Small vertical gap (px) so we consider "clash" before actual overlap. */
+/** Tiny safety gap so we detect overlap a little early. */
 const OVERLAP_GAP = 8;
 
-/* Maps internal page keys to the label text shown in the header (e.g. selectedWord 'about' → 'ABOUT') */
+/* Internal key -> display label used in the floating header. */
 const WORD_LABELS = { about: 'ABOUT', resume: 'RESUME', cover: 'COVER' };
 
 /**
- * Stable grid multiplier for FaultyTerminal so its useEffect dependency doesn't change on
- * every App re-render (e.g. when transitionRequested or selectedWord changes). If we
- * passed [2, 1] inline, a new array would be created each render and FaultyTerminal
- * would re-run its WebGL setup unnecessarily.
+ * Keep this array outside the component so React doesn't recreate it every render.
+ * If we inline `[2, 1]`, the WebGL component would think props changed and do extra work.
  */
 const FAULTY_TERMINAL_GRID_MUL = [2, 1];
 
@@ -49,9 +44,9 @@ const FAULTY_TERMINAL_GRID_MUL = [2, 1];
  * trigger), so each mount shows the shuffle animation for the current text (default or hover).
  */
 const HoverShuffle = memo(function HoverShuffle({ defaultText, hoverText, onClick }) {
-  /* true when the user's pointer is over this element */
+  /* True while pointer is over this label. */
   const [isHovered, setIsHovered] = useState(false);
-  /* Incremented on every hover enter/leave so Shuffle gets a new key and remounts (GSAP rebuild) */
+  /* Bump key on enter/leave to force a clean Shuffle remount. */
   const [hoverKey, setHoverKey] = useState(0);
   const textToShow = isHovered ? hoverText : defaultText;
 
@@ -65,7 +60,7 @@ const HoverShuffle = memo(function HoverShuffle({ defaultText, hoverText, onClic
     setHoverKey(prev => prev + 1);
   }, []);
 
-  /* Keyboard activation: Enter or Space triggers the same action as click (accessibility) */
+  /* Keyboard support for accessibility (Enter/Space = click). */
   const handleKeyDown = useCallback(e => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
@@ -102,21 +97,21 @@ function App() {
   const [showEmailPrompt, setShowEmailPrompt] = useState(false);
   const [emailPromptMessage, setEmailPromptMessage] = useState('');
 
-  /* -------------------------------------------------------------------------
-     State that drives the zoom and "page" view
-     ------------------------------------------------------------------------- */
+  /* ------------------------------
+     Main view/zoom state
+     ------------------------------ */
 
-  /* True when user has just clicked ABOUT/RESUME/COVER; tells FaultyTerminal to start zooming toward the click point */
+  /* User clicked one of the big labels; start zooming in. */
   const [transitionRequested, setTransitionRequested] = useState(false);
-  /* { x, y } in 0–1 normalized coords (center of the clicked label); FaultyTerminal zooms toward this point */
+  /* Target point in normalized screen coords for zoom focus. */
   const [transitionTarget, setTransitionTarget] = useState(null);
-  /* Which page is selected: 'about' | 'resume' | 'cover' or null when on the main three-label view */
+  /* Which section is currently active (or null on home screen). */
   const [selectedWord, setSelectedWord] = useState(null);
-  /* True after the zoom has settled; moves the header from the label position to the top of the screen (CSS transition) */
+  /* Once zoom settles, move header to top position. */
   const [headerAtTop, setHeaderAtTop] = useState(false);
-  /* True when user has clicked "Return"; tells FaultyTerminal to zoom back and triggers header/content exit animations */
+  /* Return was pressed; run zoom-back and exit animations. */
   const [zoomBackRequested, setZoomBackRequested] = useState(false);
-  /* True when the content panel would overlap the header or Return button; header slides left, return slides right */
+  /* If layout gets tight, slide header/return so they don't overlap content. */
   const [isCramped, setIsCramped] = useState(false);
 
   const headerRef = useRef(null);

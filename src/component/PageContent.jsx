@@ -1,42 +1,38 @@
 /**
- * PageContent.jsx — Terminal-style content panel for About / Resume / Cover pages
+ * PageContent.jsx
  *
- * When the user has clicked one of the three labels (ABOUT, RESUME, COVER) and
- * the zoom has settled, this component shows a centered panel that looks like
- * a small terminal window: title bar with dots + label (e.g. "ABOUT.txt"),
- * scanline overlay, and lines of "prompt" and "output" text with a blinking
- * cursor at the end.
+ * This is the terminal-looking content window for ABOUT / RESUME / COVER.
+ * Once the zoom lands, this panel shows:
+ * - a tiny title bar (with dots + file name)
+ * - the text lines for that section
+ * - a fake cursor so it still feels terminal-ish
  *
  * Props:
- * - page: 'about' | 'resume' | 'cover' — which set of lines to show
- * - isReturning: true when the user has clicked "Return"; we add a class so
- *   the panel slides right and fades out (1.1s) in sync with the header and
- *   zoom-back
+ * - page: 'about' | 'resume' | 'cover'
+ * - isReturning: when true, we play the exit animation while zooming back out
  *
- * Content is defined in ABOUT_LINES, RESUME_LINES, COVER_LINES. Each line has
- * type: 'prompt' | 'output' | 'dir' and text. Edit those arrays to change
- * what appears on each page.
+ * If you want to edit actual content text, update ABOUT_LINES / RESUME_LINES / COVER_LINES below.
  */
 
 import React, { memo, forwardRef, useState, useEffect, useRef, useCallback } from 'react';
 import './PageContent.css';
 
-/* Lines shown on the About page. type 'prompt' = terminal prompt; 'output' = response text. */
+/* About page lines. prompt = command-like line, output = normal text. */
 const ABOUT_LINES = [
   { type: 'prompt', text: '> About me and this webapp' },
-  { type: 'output', text: "First of all, thank you for taking the time to visit my website! My name is Ehlinaz, though I often go by Lula. I'm a recent university graduate with a background in software engineering and a passion for building  (or trying to build) things." },
+  { type: 'output', text: "First of all, thank you for taking the time to visit my website! My name is Ehlinaz, though I often go by Lula. I'm a recent university graduate with a background in software engineering and a passion for building (or trying to build) things." },
   { type: 'output', text: '' },
-    { type: 'output', text: "I created this site for a few reasons however mainly because I believe portfolios should be more than a list of skills on a page. And because 'proficient in React' on a CV doesn't really tell you much. Especially not how someone thinks or codes, so I wanted to give a better look at that." },
+  { type: 'output', text: "I created this site for a few reasons however mainly because I believe portfolios should be more than a list of skills on a page. And because 'proficient in React' on a CV doesn't really tell you much. Especially not how someone thinks or codes, so I wanted to give a better look at that." },
   { type: 'output', text: '' },
   { type: 'output', text: "This website itself is part of that process. It was built with the help of open-source tools, design inspiration from the React ecosystem, and a lot of time spent reading documentation written by developers who care deeply about their craft." },
   { type: 'output', text: '' },
   { type: 'output', text: "More than anything, this page exists to show curiosity, intention, and growth. I'd like to say it's not about perfection, it's about momentum." }
 ];
 
-/* Lines shown on the Cover page. */
+/* Cover page lines. */
 const COVER_LINES = [
   { type: 'prompt', text: '> Cover' },
-    { type: 'output', text: "I'm a software engineering graduate with hands-on experience in JavaScript, React Native, and mobile development. I also have a background in C++, which gave me a solid foundation in how software works at a lower level, and I think that carries over into how I approach problems generally. I'm early in my career and still figuring out where I fit in the industry." },
+  { type: 'output', text: "I'm a software engineering graduate with hands-on experience in JavaScript, React Native, and mobile development. I also have a background in C++, which gave me a solid foundation in how software works at a lower level, and I think that carries over into how I approach problems generally. I'm early in my career and still figuring out where I fit in the industry." },
   { type: 'output', text: '' },
   { type: 'output', text: "And again as a new graduate, I'm very aware that there is still a lot I don't know. What I try to bring instead is curiosity, persistence, and a genuine interest in understanding how things work. I'm comfortable reading documentation, learning unfamiliar tools and I enjoy the process of improving through iteration." },
   { type: 'output', text: '' },
@@ -45,10 +41,10 @@ const COVER_LINES = [
   { type: 'output', text: "I'm looking for opportunities where I can contribute, keep learning, and grow alongside more experienced engineers, while doing work that is thoughtful, practical, and well-built." }
 ];
 
-/* Lines shown on the Resume page. */
+/* Resume page lines. */
 const RESUME_LINES = [
   { type: 'prompt', text: '> Summary' },
-  { type: 'output', text: "I wanted to include my resume in the website aswell, however if you would like to read it in PDF please scroll to the bottom as it is attached!" },
+  { type: 'output', text: "I wanted to include my resume in the website as well, however if you would like to read it in PDF please scroll to the bottom as it is attached!" },
   { type: 'output', text: '' },
   { type: 'prompt', text: '> Skills' },
   { type: 'output', text: 'Languages & Frameworks: Java, C++, Python, JavaScript, HTML, CSS, SQL, React.js, React Native, Node.js' },
@@ -77,13 +73,10 @@ const RESUME_LINES = [
   { type: 'output', text: '' },
   { type: 'output', text: 'Diploma of Information Technology (Aug 2022 – Sept 2023)' },
   { type: 'output', text: 'La Trobe College | Melbourne, VIC' },
-  { type: 'link', text: 'Open my full resume (PDF)', href: '/LulaITResume.pdf'},
+  { type: 'link', text: 'Open my full resume (PDF)', href: '/LulaITResume.pdf' },
 ];
 
-/**
- * Renders a single line with the correct class: prompt (green), output (lighter green), or dir (directory listing style).
- * Empty output lines get a spacer class for paragraph breaks.
- */
+/** Render one line item with the right visual style. */
 function TerminalLine({ line }) {
   const isSpacer = line.type === 'output' && line.text === '';
   const baseClass = line.type === 'prompt' ? 'page-content__line page-content__line--prompt' :
@@ -91,7 +84,7 @@ function TerminalLine({ line }) {
     'page-content__line page-content__line--output';
   const className = isSpacer ? `${baseClass} page-content__line--spacer` : baseClass;
 
-    if (line.type === 'link') {
+  if (line.type === 'link') {
     return (
       <div className={className}>
         <a
@@ -117,6 +110,7 @@ const PageContent = memo(forwardRef(function PageContent({ page, isReturning }, 
   const [scrollTop, setScrollTop] = useState(0);
   const [scrollMetrics, setScrollMetrics] = useState({ scrollHeight: 0, clientHeight: 0 });
 
+  // Keep scrollbar state in sync whenever content or viewport changes.
   const checkOverflow = useCallback(() => {
     const el = bodyRef.current;
     if (!el) return;
@@ -147,6 +141,7 @@ const PageContent = memo(forwardRef(function PageContent({ page, isReturning }, 
     };
   }, [page, lines, isReturning, checkOverflow]);
 
+  // Clicking on the custom scrollbar track jumps scroll position.
   const handleTrackClick = useCallback((e) => {
     const body = bodyRef.current;
     const track = trackRef.current;
@@ -162,6 +157,7 @@ const PageContent = memo(forwardRef(function PageContent({ page, isReturning }, 
     body.scrollTop = (thumbTop / maxThumbTop) * scrollRange;
   }, []);
 
+  // Dragging the custom thumb updates scroll in real-time.
   const handleThumbMouseDown = useCallback((e) => {
     e.preventDefault();
     const body = bodyRef.current;

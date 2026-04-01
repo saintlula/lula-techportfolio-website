@@ -1,10 +1,11 @@
 /**
  * index.css — Global styles applied to the entire app
  *
- * These rules affect html, body, and default elements before any component CSS loads.
- * They set baseline typography, colors, and layout so the app looks correct even
- * before React has painted. Component-specific styles (App.css, etc.) override
- * these where needed.
+ * Keeping this file intentionally small:
+ * - only true global resets
+ * - only fallback colors/font
+ *
+ * Everything design-heavy lives in component styles so this file stays predictable.
  */
 
 /* ==========================================================================
@@ -16,32 +17,15 @@
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-
-  /* System light/dark preference; we use dark theme by default */
-  color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
   background-color: #000;
-  /* Black background for the terminal-style site */
 
-  /* Prevent browser from synthesising bold/italic; use only loaded fonts */
+  /* Keep text rendering consistent across browsers. */
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
-}
-
-/* Default link styling (used if we add <a> tags elsewhere) */
-a
-{
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-
-a:hover
-{
-  color: #535bf2;
 }
 
 /* Body: full height, no margin, so the app can fill the viewport */
@@ -51,25 +35,6 @@ body
   min-width: 320px;
   min-height: 100vh;
   overflow: hidden;
-  /* Prevents scrollbars; the canvas and UI fill the screen */
-}
-
-/* Default heading (if used) */
-h1
-{
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-/* Default button reset (our .return-button in App.css overrides most of this) */
-button
-{
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
 }
 
 /* ==========================================================================
@@ -106,48 +71,4 @@ body
   font-family: 'AerojonesNF', system-ui, sans-serif;
   background-color: #000;
   color: #fff;
-}
-
-/* ==========================================================================
-   Buttons (global defaults)
-   ========================================================================== */
-
-button
-{
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-
-button:hover
-{
-  border-color: #646cff;
-}
-
-button:focus,
-button:focus-visible
-{
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-/* ==========================================================================
-   Light mode overrides (when user OS prefers light theme)
-   ========================================================================== */
-
-@media (prefers-color-scheme: light)
-{
-  :root
-  {
-    color: #213547;
-    background-color: #ffffff;
-  }
-
-  a:hover
-  {
-    color: #747bff;
-  }
-
-  button
-  {
-    background-color: #f9f9f9;
-  }
 }

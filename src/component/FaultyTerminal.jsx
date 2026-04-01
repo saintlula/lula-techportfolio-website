@@ -1,22 +1,15 @@
 /**
- * FaultyTerminal.jsx — Full-screen WebGL "faulty terminal" background
+ * FaultyTerminal.jsx
  *
- * Renders a full-screen shader that looks like a glitchy, scanline CRT with a
- * grid of digit-like cells that react to time, mouse, and a "zoom" transition.
+ * This is the full-screen WebGL background for the terminal theme.
+ * The shader handles all the visual personality: scanlines, glitch motion,
+ * cursor reaction, and the gather/zoom transitions.
  *
- * Behaviour:
- * - On load: optional cell-by-cell fade-in (pageLoadAnimation).
- * - Mouse: optional glow/ripple around cursor (mouseReact, mouseStrength).
- * - Zoom: when App sets transitionRequested + transitionTarget, the shader
- *   zooms toward that point (uGatherProgress 0 → 1 over 1.1s). When App sets
- *   zoomBackRequested, it zooms back (uGatherProgress 1 → 0) and calls
- *   onZoomBackComplete when done.
- *
- * Performance:
- * - Renders at 88% resolution then scales canvas to full size (fewer pixels).
- * - DPR capped at 1.5. Antialiasing off.
- * - When the tab is hidden (Page Visibility API), the loop runs at ~10 fps
- *   instead of 60 fps. Resize is throttled.
+ * What this component does in plain terms:
+ * - sets up OGL renderer + shader uniforms
+ * - updates time/mouse/transition uniforms every frame
+ * - pauses or throttles when needed for performance
+ * - notifies App when zoom-in / zoom-back completes
  */
 
 import { Renderer, Program, Mesh, Color, Triangle } from "ogl";

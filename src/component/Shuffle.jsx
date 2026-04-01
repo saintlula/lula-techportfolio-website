@@ -1,24 +1,18 @@
 /**
- * Shuffle.jsx — Character-by-character shuffle / scramble text animation
+ * Shuffle.jsx
  *
- * Uses GSAP SplitText to split the text into characters, then animates each
- * character by sliding a strip of copies (original + scramble copies + real
- * char) so the "real" character appears to shuffle in. Can run once on scroll
- * (triggerOnce=true) or immediately and loop (triggerOnce=false, used for
- * ABOUT/RESUME/COVER labels and header).
+ * This is my text "scramble/shuffle" effect.
+ * It takes a word, splits it into chars, then slides fake chars through each
+ * slot until the real char lands in place.
  *
- * Flow:
- * - build(): SplitText splits into chars; for each char we wrap it in a
- *   container with an inner strip that holds [firstCopy, ...scramble copies, real].
- *   We set startX/finalX so sliding the strip reveals the real character.
- * - play(): GSAP timeline animates all strips' x from start to final; odd/even
- *   stagger or random delay. If loop, timeline repeats with repeatDelay.
- * - teardown(): Kill timeline, revert SplitText, restore DOM so we can rebuild
- *   when text or props change.
+ * Supports two modes:
+ * - triggerOnce=true  -> play once when it scrolls into view
+ * - triggerOnce=false -> run immediately (used for the home labels/header)
  *
- * When triggerOnce=false (main menu / header), we call create() immediately
- * (no ScrollTrigger) so the animation runs on mount and loops; we also arm
- * hover to re-run the shuffle on mouseenter.
+ * Core lifecycle in here:
+ * - build()    -> build char wrappers/strips
+ * - play()     -> animate strip positions with GSAP
+ * - teardown() -> cleanly revert everything so remount/replay stays reliable
  */
 
 import React, {
@@ -76,14 +70,14 @@ const Shuffle = memo(function Shuffle({
   const playingRef = useRef(false);
   const hoverHandlerRef = useRef(null);
 
-  /** Wait for fonts so SplitText measures correctly (widths of chars). */
+  /** Wait for fonts first, otherwise SplitText char widths can be wrong. */
   useEffect(() => {
     if (!("fonts" in document)) return;
     if (document.fonts.status === "loaded") return;
     document.fonts.ready.then(() => setFontsLoaded(true));
   }, []);
 
-  /** ScrollTrigger "start" string (e.g. "top 90%") when triggerOnce is true. */
+  /** Build ScrollTrigger start string when we're in triggerOnce mode. */
   const scrollTriggerStart = useMemo(() => {
     const startPct = (1 - threshold) * 100;
     const mm = /^(-?\d+(?:\.\d+)?)(px|em|rem|%)?$/.exec(rootMargin || "");
@@ -117,10 +111,7 @@ const Shuffle = memo(function Shuffle({
         }
       };
 
-      /**
-       * Teardown: kill timeline, restore DOM (replace each wrapper with the original char node), revert SplitText.
-       * Called before rebuild or on cleanup so we don't leave extra nodes or GSAP instances.
-       */
+      /** Full cleanup before rebuild/unmount so no ghost nodes or timelines stick around. */
       const teardown = () => {
         if (tlRef.current) {
           tlRef.current.kill();
@@ -145,11 +136,9 @@ const Shuffle = memo(function Shuffle({
       };
 
       /**
-       * Build: SplitText splits el into chars. For each char we create:
-       * - A wrapper (overflow hidden, fixed width = char width).
-       * - An inner strip (will-change: transform) containing: [firstCopy (original), ...scramble copies, real char].
-       * We set strip x to startX so the real char is off-screen; animation moves to finalX to reveal it.
-       * data-orig="1" marks the "real" char for teardown. data-start-x / data-final-x drive the tween.
+       * Build one lane per character:
+       * wrapper = viewport for that char
+       * strip   = rolling sequence (copies + final real char)
        */
       const build = () => {
         teardown();
@@ -263,7 +252,7 @@ const Shuffle = memo(function Shuffle({
         });
       };
 
-      /** When loop is false and animation completes: leave only the real char in each strip, remove will-change. */
+      /** In one-shot mode, keep only final chars once animation finishes. */
       const cleanupToStill = () => {
         wrappersRef.current.forEach((w) => {
           const strip = w.firstElementChild;
@@ -276,11 +265,7 @@ const Shuffle = memo(function Shuffle({
         });
       };
 
-      /**
-       * play(): Create a GSAP timeline that tweens each strip's x from start to final.
-       * If animationMode === 'evenodd', odd and even strips run with a stagger; otherwise random delay per strip.
-       * If loop, timeline repeats with repeatDelay. On complete (when !loop) we cleanup and arm hover.
-       */
+      /** Run the timeline that moves each strip from start to final X. */
       const play = () => {
         const strips = inners();
         if (!strips.length) return;
@@ -376,7 +361,7 @@ const Shuffle = memo(function Shuffle({
         tlRef.current = tl;
       };
 
-      /** Add mouseenter listener to re-run build + play when user hovers (and we're not currently playing). */
+      /** Optional hover replay for labels/header. */
       const armHover = () => {
         if (!triggerOnHover) return;
         removeHover();
@@ -390,7 +375,7 @@ const Shuffle = memo(function Shuffle({
         el.addEventListener("mouseenter", handler);
       };
 
-      /** Full setup: build DOM, (optional) randomize scramble chars, play timeline, arm hover, set ready so text is visible. */
+      /** Full setup flow used by both immediate mode and trigger mode. */
       const create = () => {
         build();
         if (scrambleCharset) randomizeScrambles();
@@ -400,7 +385,7 @@ const Shuffle = memo(function Shuffle({
       };
 
       if (!triggerOnce) {
-        /* Main menu / header: no scroll trigger; run animation immediately so text (e.g. CLICK → RESUME) works. */
+        /* Main menu/header mode: run instantly (no ScrollTrigger). */
         create();
         return () => {
           removeHover();

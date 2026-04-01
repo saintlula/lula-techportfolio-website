@@ -2,7 +2,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import './OceanBlue.css';
 
 export default function OceanBlue({ onBack }) {
+  // Which section is currently visible in the ocean-blue experience.
   const [screen, setScreen] = useState('landing'); // landing | about | resume | cover
+  // Active animated transition between sections (if any).
   const [transition, setTransition] = useState(null); // { from, to, dir }
   const [showEmailPrompt, setShowEmailPrompt] = useState(false);
   const [emailPromptMessage, setEmailPromptMessage] = useState('');
@@ -29,7 +31,7 @@ export default function OceanBlue({ onBack }) {
     return j > i ? 'right' : 'left';
   }, []);
 
-  const go = useCallback((to, dir, opts) => {
+  const go = useCallback((to, dir) => {
     if (transition || screen === to) return;
     if (reducedMotion) {
       setScreen(to);
@@ -39,10 +41,10 @@ export default function OceanBlue({ onBack }) {
     setTransition({ from: screen, to, dir });
   }, [reducedMotion, screen, transition]);
 
-  const goTo = useCallback((to, opts) => {
+  const goTo = useCallback((to) => {
     const dir = dirFor(screen, to);
     if (!dir) return;
-    go(to, dir, opts);
+    go(to, dir);
   }, [dirFor, go, screen]);
 
   const onAnimEnd = useCallback(() => {
@@ -175,7 +177,7 @@ export default function OceanBlue({ onBack }) {
         <button
           type="button"
           className="more-design__nav more-design__nav--about-resume"
-          onClick={(e) => goTo('resume', { text: 'RESUME', fromEl: e.currentTarget })}
+          onClick={() => goTo('resume')}
           aria-label="Resume"
         >
           <span>R</span>
