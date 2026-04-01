@@ -19,9 +19,9 @@
  *   instead of 60 fps. Resize is throttled.
  */
 
-import { Renderer, Program, Mesh, Color, Triangle } from 'ogl';
-import { useEffect, useRef, useMemo, useCallback } from 'react';
-import './FaultyTerminal.css';
+import { Renderer, Program, Mesh, Color, Triangle } from "ogl";
+import { useEffect, useRef, useMemo, useCallback } from "react";
+import "./FaultyTerminal.css";
 
 /* -----------------------------------------------------------------------------
    Vertex shader
@@ -280,14 +280,18 @@ void main() {
 
 /** Converts a hex colour (e.g. "#7FAF7A") to [r, g, b] in 0–1 for the shader. */
 function hexToRgb(hex) {
-  let h = hex.replace('#', '').trim();
+  let h = hex.replace("#", "").trim();
   if (h.length === 3)
     h = h
-      .split('')
-      .map(c => c + c)
-      .join('');
+      .split("")
+      .map((c) => c + c)
+      .join("");
   const num = parseInt(h, 16);
-  return [((num >> 16) & 255) / 255, ((num >> 8) & 255) / 255, (num & 255) / 255];
+  return [
+    ((num >> 16) & 255) / 255,
+    ((num >> 8) & 255) / 255,
+    (num & 255) / 255,
+  ];
 }
 
 /** Duration in ms for both zoom-in and zoom-back transitions (must match App.css header return duration). */
@@ -314,7 +318,7 @@ export default function FaultyTerminal({
   chromaticAberration = 0,
   dither = 0,
   curvature = 0.2,
-  tint = '#ffffff',
+  tint = "#ffffff",
   mouseReact = false,
   mouseStrength = 0.2,
   pageLoadAnimation = true,
@@ -332,8 +336,14 @@ export default function FaultyTerminal({
   const containerRef = useRef(null);
   const programRef = useRef(null);
   const rendererRef = useRef(null);
-  const mouseRef = useRef({ x: 0.5, y: 0.5 });
-  const smoothMouseRef = useRef({ x: 0.5, y: 0.5 });
+  const mouseRef = useRef({
+    x: 0.5,
+    y: 0.5,
+  });
+  const smoothMouseRef = useRef({
+    x: 0.5,
+    y: 0.5,
+  });
   const frozenTimeRef = useRef(0);
   const rafRef = useRef(0);
   const pauseRef = useRef(pause);
@@ -375,20 +385,30 @@ export default function FaultyTerminal({
       cancelAnimationFrame(rafRef.current);
       rafRef.current = 0;
     } else {
-      if (updateFnRef.current && rafRef.current === 0 && (typeof document === 'undefined' || !document.hidden)) {
+      if (
+        updateFnRef.current &&
+        rafRef.current === 0 &&
+        (typeof document === "undefined" || !document.hidden)
+      ) {
         rafRef.current = requestAnimationFrame(updateFnRef.current);
       }
     }
   }, [pause]);
 
   const tintVec = useMemo(() => hexToRgb(tint), [tint]);
-  const ditherValue = useMemo(() => (typeof dither === 'boolean' ? (dither ? 1 : 0) : dither), [dither]);
+  const ditherValue = useMemo(
+    () => (typeof dither === "boolean" ? (dither ? 1 : 0) : dither),
+    [dither],
+  );
 
   /** Writes current mouse position (0–1, origin bottom-left) into mouseRef for the RAF loop. */
-  const handleMouseMove = useCallback(e => {
+  const handleMouseMove = useCallback((e) => {
     const x = e.clientX / window.innerWidth;
     const y = 1 - e.clientY / window.innerHeight;
-    mouseRef.current = { x, y };
+    mouseRef.current = {
+      x,
+      y,
+    };
   }, []);
 
   useEffect(() => {
@@ -400,7 +420,10 @@ export default function FaultyTerminal({
     }
 
     const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
-    const renderer = new Renderer({ dpr, antialias: false });
+    const renderer = new Renderer({
+      dpr,
+      antialias: false,
+    });
     rendererRef.current = renderer;
     const gl = renderer.gl;
     gl.clearColor(0, 0, 0, 1);
@@ -411,38 +434,90 @@ export default function FaultyTerminal({
       vertex: vertexShader,
       fragment: fragmentShader,
       uniforms: {
-        iTime: { value: 0 },
-        iResolution: { value: new Color(gl.canvas.width, gl.canvas.height, gl.canvas.width / gl.canvas.height) },
-        uScale: { value: scale },
-        uGridMul: { value: new Float32Array(gridMul) },
-        uDigitSize: { value: digitSize },
-        uScanlineIntensity: { value: scanlineIntensity },
-        uGlitchAmount: { value: glitchAmount },
-        uFlickerAmount: { value: flickerAmount },
-        uNoiseAmp: { value: noiseAmp },
-        uChromaticAberration: { value: chromaticAberration },
-        uDither: { value: ditherValue },
-        uCurvature: { value: curvature },
-        uTint: { value: new Color(tintVec[0], tintVec[1], tintVec[2]) },
-        uMouse: { value: new Float32Array([smoothMouseRef.current.x, smoothMouseRef.current.y]) },
-        uMouseStrength: { value: mouseStrength },
-        uUseMouse: { value: mouseReact ? 1 : 0 },
-        uPageLoadProgress: { value: pageLoadAnimation ? 0 : 1 },
-        uUsePageLoadAnimation: { value: pageLoadAnimation ? 1 : 0 },
-        uBrightness: { value: brightness },
-        uGatherProgress: { value: 0 },
-        uTargetPos: { value: new Float32Array([0.5, 0.5]) }
-      }
+        iTime: {
+          value: 0,
+        },
+        iResolution: {
+          value: new Color(
+            gl.canvas.width,
+            gl.canvas.height,
+            gl.canvas.width / gl.canvas.height,
+          ),
+        },
+        uScale: {
+          value: scale,
+        },
+        uGridMul: {
+          value: new Float32Array(gridMul),
+        },
+        uDigitSize: {
+          value: digitSize,
+        },
+        uScanlineIntensity: {
+          value: scanlineIntensity,
+        },
+        uGlitchAmount: {
+          value: glitchAmount,
+        },
+        uFlickerAmount: {
+          value: flickerAmount,
+        },
+        uNoiseAmp: {
+          value: noiseAmp,
+        },
+        uChromaticAberration: {
+          value: chromaticAberration,
+        },
+        uDither: {
+          value: ditherValue,
+        },
+        uCurvature: {
+          value: curvature,
+        },
+        uTint: {
+          value: new Color(tintVec[0], tintVec[1], tintVec[2]),
+        },
+        uMouse: {
+          value: new Float32Array([
+            smoothMouseRef.current.x,
+            smoothMouseRef.current.y,
+          ]),
+        },
+        uMouseStrength: {
+          value: mouseStrength,
+        },
+        uUseMouse: {
+          value: mouseReact ? 1 : 0,
+        },
+        uPageLoadProgress: {
+          value: pageLoadAnimation ? 0 : 1,
+        },
+        uUsePageLoadAnimation: {
+          value: pageLoadAnimation ? 1 : 0,
+        },
+        uBrightness: {
+          value: brightness,
+        },
+        uGatherProgress: {
+          value: 0,
+        },
+        uTargetPos: {
+          value: new Float32Array([0.5, 0.5]),
+        },
+      },
     });
     programRef.current = program;
 
-    const mesh = new Mesh(gl, { geometry, program });
+    const mesh = new Mesh(gl, {
+      geometry,
+      program,
+    });
 
     /* Render slightly below full res on desktop; on mobile prefer full res for smoother look. */
     const isMobileViewport = () =>
-      typeof window !== 'undefined' &&
-      typeof window.matchMedia === 'function' &&
-      window.matchMedia('(max-width: 600px)').matches;
+      typeof window !== "undefined" &&
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(max-width: 600px)").matches;
 
     const resize = () => {
       const w = window.innerWidth;
@@ -457,8 +532,8 @@ export default function FaultyTerminal({
       renderer.dpr = dpr;
       const canvas = gl.canvas;
       if (canvas.style) {
-        canvas.style.width = w + 'px';
-        canvas.style.height = h + 'px';
+        canvas.style.width = w + "px";
+        canvas.style.height = h + "px";
       }
 
       program.uniforms.iResolution.value.set(w, h, w / h);
@@ -484,16 +559,20 @@ export default function FaultyTerminal({
       resizeTick = t;
       resize();
     };
-    window.addEventListener('resize', throttledResize);
+    window.addEventListener("resize", throttledResize);
 
     /**
      * Main loop: updates time, page-load progress, mouse smoothing, zoom/zoom-back state, then renders.
      * When the tab is hidden we don't schedule the next RAF; the visibility interval calls update every 100ms instead.
      */
-    const update = t => {
+    const update = (t) => {
       updateFnRef.current = update;
       rafRef.current = 0;
-      if (typeof document !== 'undefined' && (!document.hidden && !pauseRef.current)) {
+      if (
+        typeof document !== "undefined" &&
+        !document.hidden &&
+        !pauseRef.current
+      ) {
         rafRef.current = requestAnimationFrame(update);
       }
 
@@ -546,7 +625,10 @@ export default function FaultyTerminal({
           zoomBackStartRef.current = -1;
           onZoomBackCompleteRef.current?.();
         }
-      } else if (transitionRequestedRef.current && transitionStartRef.current >= 0) {
+      } else if (
+        transitionRequestedRef.current &&
+        transitionStartRef.current >= 0
+      ) {
         /* Zoom-in: uGatherProgress goes from 0 to 1; then we call onTransitionComplete. */
         const target = transitionTargetRef.current;
         if (target && target.x != null && target.y != null) {
@@ -571,7 +653,9 @@ export default function FaultyTerminal({
         zoomBackStartRef.current = 0;
       }
 
-      renderer.render({ scene: mesh });
+      renderer.render({
+        scene: mesh,
+      });
     };
 
     /** When tab is hidden we switch to a 100ms interval instead of RAF to save CPU/GPU; when visible again we resume RAF. */
@@ -580,7 +664,10 @@ export default function FaultyTerminal({
         cancelAnimationFrame(rafRef.current);
         rafRef.current = 0;
         if (!visibilityIntervalRef.current) {
-          visibilityIntervalRef.current = setInterval(() => update(performance.now()), 100);
+          visibilityIntervalRef.current = setInterval(
+            () => update(performance.now()),
+            100,
+          );
         }
       } else {
         if (visibilityIntervalRef.current) {
@@ -600,18 +687,22 @@ export default function FaultyTerminal({
     }
     ctn.appendChild(gl.canvas);
 
-    if (mouseReact) window.addEventListener('mousemove', handleMouseMove, { passive: true });
-    document.addEventListener('visibilitychange', onVisibilityChange);
+    if (mouseReact)
+      window.addEventListener("mousemove", handleMouseMove, {
+        passive: true,
+      });
+    document.addEventListener("visibilitychange", onVisibilityChange);
 
     return () => {
       cancelAnimationFrame(rafRef.current);
-      if (visibilityIntervalRef.current) clearInterval(visibilityIntervalRef.current);
-      window.removeEventListener('resize', throttledResize);
-      window.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('visibilitychange', onVisibilityChange);
+      if (visibilityIntervalRef.current)
+        clearInterval(visibilityIntervalRef.current);
+      window.removeEventListener("resize", throttledResize);
+      window.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
 
       if (import.meta.env.PROD) {
-        gl.getExtension('WEBGL_lose_context')?.loseContext();
+        gl.getExtension("WEBGL_lose_context")?.loseContext();
       }
     };
   }, [
@@ -631,8 +722,15 @@ export default function FaultyTerminal({
     mouseStrength,
     pageLoadAnimation,
     brightness,
-    handleMouseMove
+    handleMouseMove,
   ]);
 
-  return <div ref={containerRef} className={`faulty-terminal-container ${className}`} style={style} {...rest} />;
+  return (
+    <div
+      ref={containerRef}
+      className={`faulty-terminal-container ${className}`}
+      style={style}
+      {...rest}
+    />
+  );
 }

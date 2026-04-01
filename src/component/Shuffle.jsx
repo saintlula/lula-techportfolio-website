@@ -21,45 +21,52 @@
  * hover to re-run the shuffle on mouseenter.
  */
 
-import React, { useRef, useEffect, useState, useMemo, memo, useId } from 'react';
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { SplitText as GSAPSplitText } from 'gsap/SplitText';
-import { useGSAP } from '@gsap/react';
-import './Shuffle.css';
+import React, {
+  useRef,
+  useEffect,
+  useState,
+  useMemo,
+  memo,
+  useId,
+} from "react";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { SplitText as GSAPSplitText } from "gsap/SplitText";
+import { useGSAP } from "@gsap/react";
+import "./Shuffle.css";
 
 gsap.registerPlugin(ScrollTrigger, GSAPSplitText, useGSAP);
 
 const Shuffle = memo(function Shuffle({
   text,
-  className = '',
+  className = "",
   style = {},
-  shuffleDirection = 'right',
+  shuffleDirection = "right",
   duration = 0.35,
   maxDelay = 0,
-  ease = 'power3.out',
+  ease = "power3.out",
   threshold = 0.1,
-  rootMargin = '-100px',
-  tag = 'p',
-  textAlign = 'center',
+  rootMargin = "-100px",
+  tag = "p",
+  textAlign = "center",
   onShuffleComplete,
   shuffleTimes = 1,
-  animationMode = 'evenodd',
+  animationMode = "evenodd",
   loop = true,
   loopDelay = 1.0,
   stagger = 0.03,
-  scrambleCharset = '',
+  scrambleCharset = "",
   colorFrom,
   colorTo,
   triggerOnce = true,
   respectReducedMotion = true,
-  triggerOnHover = true
+  triggerOnHover = true,
 }) {
   const elementId = useId();
   const [fontsLoaded, setFontsLoaded] = useState(() => {
-    if (typeof document === 'undefined') return false;
-    if (!('fonts' in document)) return true;
-    return document.fonts.status === 'loaded';
+    if (typeof document === "undefined") return false;
+    if (!("fonts" in document)) return true;
+    return document.fonts.status === "loaded";
   });
   const [ready, setReady] = useState(false);
 
@@ -71,18 +78,19 @@ const Shuffle = memo(function Shuffle({
 
   /** Wait for fonts so SplitText measures correctly (widths of chars). */
   useEffect(() => {
-    if (!('fonts' in document)) return;
-    if (document.fonts.status === 'loaded') return;
+    if (!("fonts" in document)) return;
+    if (document.fonts.status === "loaded") return;
     document.fonts.ready.then(() => setFontsLoaded(true));
   }, []);
 
   /** ScrollTrigger "start" string (e.g. "top 90%") when triggerOnce is true. */
   const scrollTriggerStart = useMemo(() => {
     const startPct = (1 - threshold) * 100;
-    const mm = /^(-?\d+(?:\.\d+)?)(px|em|rem|%)?$/.exec(rootMargin || '');
+    const mm = /^(-?\d+(?:\.\d+)?)(px|em|rem|%)?$/.exec(rootMargin || "");
     const mv = mm ? parseFloat(mm[1]) : 0;
-    const mu = mm ? mm[2] || 'px' : 'px';
-    const sign = mv === 0 ? '' : mv < 0 ? `-=${Math.abs(mv)}${mu}` : `+=${mv}${mu}`;
+    const mu = mm ? mm[2] || "px" : "px";
+    const sign =
+      mv === 0 ? "" : mv < 0 ? `-=${Math.abs(mv)}${mu}` : `+=${mv}${mu}`;
     return `top ${startPct}%${sign}`;
   }, [threshold, rootMargin]);
 
@@ -90,7 +98,11 @@ const Shuffle = memo(function Shuffle({
     () => {
       const el = document.getElementById(elementId);
       if (!el || !text || !fontsLoaded) return;
-      if (respectReducedMotion && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      if (
+        respectReducedMotion &&
+        window.matchMedia &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      ) {
         setReady(true);
         onShuffleComplete?.();
         return;
@@ -100,7 +112,7 @@ const Shuffle = memo(function Shuffle({
 
       const removeHover = () => {
         if (hoverHandlerRef.current) {
-          el.removeEventListener('mouseenter', hoverHandlerRef.current);
+          el.removeEventListener("mouseenter", hoverHandlerRef.current);
           hoverHandlerRef.current = null;
         }
       };
@@ -115,10 +127,11 @@ const Shuffle = memo(function Shuffle({
           tlRef.current = null;
         }
         if (wrappersRef.current.length) {
-          wrappersRef.current.forEach(wrap => {
+          wrappersRef.current.forEach((wrap) => {
             const inner = wrap.firstElementChild;
             const orig = inner?.querySelector('[data-orig="1"]');
-            if (orig && wrap.parentNode) wrap.parentNode.replaceChild(orig, wrap);
+            if (orig && wrap.parentNode)
+              wrap.parentNode.replaceChild(orig, wrap);
           });
           wrappersRef.current = [];
         }
@@ -142,56 +155,69 @@ const Shuffle = memo(function Shuffle({
         teardown();
 
         splitRef.current = new GSAPSplitText(el, {
-          type: 'chars',
-          charsClass: 'shuffle-char',
-          wordsClass: 'shuffle-word',
-          linesClass: 'shuffle-line',
+          type: "chars",
+          charsClass: "shuffle-char",
+          wordsClass: "shuffle-word",
+          linesClass: "shuffle-line",
           smartWrap: true,
-          reduceWhiteSpace: false
+          reduceWhiteSpace: false,
         });
 
         const chars = splitRef.current.chars || [];
         wrappersRef.current = [];
 
         const rolls = Math.max(1, Math.floor(shuffleTimes));
-        const rand = set => set.charAt(Math.floor(Math.random() * set.length)) || '';
+        const rand = (set) =>
+          set.charAt(Math.floor(Math.random() * set.length)) || "";
 
-        chars.forEach(ch => {
+        chars.forEach((ch) => {
           const parent = ch.parentElement;
           if (!parent) return;
 
           const w = ch.getBoundingClientRect().width;
           if (!w) return;
 
-          const wrap = document.createElement('span');
+          const wrap = document.createElement("span");
           Object.assign(wrap.style, {
-            display: 'inline-block',
-            overflow: 'hidden',
-            width: w + 'px',
-            verticalAlign: 'baseline'
+            display: "inline-block",
+            overflow: "hidden",
+            width: w + "px",
+            verticalAlign: "baseline",
           });
 
-          const inner = document.createElement('span');
+          const inner = document.createElement("span");
           Object.assign(inner.style, {
-            display: 'inline-block',
-            whiteSpace: 'nowrap',
-            willChange: 'transform'
+            display: "inline-block",
+            whiteSpace: "nowrap",
+            willChange: "transform",
           });
 
           parent.insertBefore(wrap, ch);
           wrap.appendChild(inner);
 
           const firstOrig = ch.cloneNode(true);
-          Object.assign(firstOrig.style, { display: 'inline-block', width: w + 'px', textAlign: 'center' });
+          Object.assign(firstOrig.style, {
+            display: "inline-block",
+            width: w + "px",
+            textAlign: "center",
+          });
 
-          ch.setAttribute('data-orig', '1');
-          Object.assign(ch.style, { display: 'inline-block', width: w + 'px', textAlign: 'center' });
+          ch.setAttribute("data-orig", "1");
+          Object.assign(ch.style, {
+            display: "inline-block",
+            width: w + "px",
+            textAlign: "center",
+          });
 
           inner.appendChild(firstOrig);
           for (let k = 0; k < rolls; k++) {
             const c = ch.cloneNode(true);
             if (scrambleCharset) c.textContent = rand(scrambleCharset);
-            Object.assign(c.style, { display: 'inline-block', width: w + 'px', textAlign: 'center' });
+            Object.assign(c.style, {
+              display: "inline-block",
+              width: w + "px",
+              textAlign: "center",
+            });
             inner.appendChild(c);
           }
           inner.appendChild(ch);
@@ -199,7 +225,7 @@ const Shuffle = memo(function Shuffle({
           const steps = rolls + 1;
           let startX = 0;
           let finalX = -steps * w;
-          if (shuffleDirection === 'right') {
+          if (shuffleDirection === "right") {
             const firstCopy = inner.firstElementChild;
             const real = inner.lastElementChild;
             if (real) inner.insertBefore(real, inner.firstChild);
@@ -208,40 +234,45 @@ const Shuffle = memo(function Shuffle({
             finalX = 0;
           }
 
-          gsap.set(inner, { x: startX, force3D: true });
+          gsap.set(inner, {
+            x: startX,
+            force3D: true,
+          });
           if (colorFrom) inner.style.color = colorFrom;
 
-          inner.setAttribute('data-final-x', String(finalX));
-          inner.setAttribute('data-start-x', String(startX));
+          inner.setAttribute("data-final-x", String(finalX));
+          inner.setAttribute("data-start-x", String(startX));
 
           wrappersRef.current.push(wrap);
         });
       };
 
-      const inners = () => wrappersRef.current.map(w => w.firstElementChild);
+      const inners = () => wrappersRef.current.map((w) => w.firstElementChild);
 
       const randomizeScrambles = () => {
         if (!scrambleCharset) return;
-        wrappersRef.current.forEach(w => {
+        wrappersRef.current.forEach((w) => {
           const strip = w.firstElementChild;
           if (!strip) return;
           const kids = Array.from(strip.children);
           for (let i = 1; i < kids.length - 1; i++) {
-            kids[i].textContent = scrambleCharset.charAt(Math.floor(Math.random() * scrambleCharset.length));
+            kids[i].textContent = scrambleCharset.charAt(
+              Math.floor(Math.random() * scrambleCharset.length),
+            );
           }
         });
       };
 
       /** When loop is false and animation completes: leave only the real char in each strip, remove will-change. */
       const cleanupToStill = () => {
-        wrappersRef.current.forEach(w => {
+        wrappersRef.current.forEach((w) => {
           const strip = w.firstElementChild;
           if (!strip) return;
           const real = strip.querySelector('[data-orig="1"]');
           if (!real) return;
           strip.replaceChildren(real);
-          strip.style.transform = 'none';
-          strip.style.willChange = 'auto';
+          strip.style.transform = "none";
+          strip.style.willChange = "auto";
         });
       };
 
@@ -262,38 +293,51 @@ const Shuffle = memo(function Shuffle({
           repeatDelay: loop ? loopDelay : 0,
           onRepeat: () => {
             if (scrambleCharset) randomizeScrambles();
-            gsap.set(strips, { x: (i, t) => parseFloat(t.getAttribute('data-start-x') || '0') });
+            gsap.set(strips, {
+              x: (i, t) => parseFloat(t.getAttribute("data-start-x") || "0"),
+            });
             onShuffleComplete?.();
           },
           onComplete: () => {
             playingRef.current = false;
             if (!loop) {
               cleanupToStill();
-              if (colorTo) gsap.set(strips, { color: colorTo });
+              if (colorTo)
+                gsap.set(strips, {
+                  color: colorTo,
+                });
               onShuffleComplete?.();
               armHover();
             }
-          }
+          },
         });
 
         const addTween = (targets, at) => {
           tl.to(
             targets,
             {
-              x: (i, t) => parseFloat(t.getAttribute('data-final-x') || '0'),
+              x: (i, t) => parseFloat(t.getAttribute("data-final-x") || "0"),
               duration,
               ease,
               force3D: true,
-              stagger: animationMode === 'evenodd' ? stagger : 0
+              stagger: animationMode === "evenodd" ? stagger : 0,
             },
-            at
+            at,
           );
           if (colorFrom && colorTo) {
-            tl.to(targets, { color: colorTo, duration, ease }, at);
+            tl.to(
+              targets,
+              {
+                color: colorTo,
+                duration,
+                ease,
+              },
+              at,
+            );
           }
         };
 
-        if (animationMode === 'evenodd') {
+        if (animationMode === "evenodd") {
           const odd = strips.filter((_, i) => i % 2 === 1);
           const even = strips.filter((_, i) => i % 2 === 0);
           const oddTotal = duration + Math.max(0, odd.length - 1) * stagger;
@@ -301,19 +345,31 @@ const Shuffle = memo(function Shuffle({
           if (odd.length) addTween(odd, 0);
           if (even.length) addTween(even, evenStart);
         } else {
-          strips.forEach(strip => {
+          strips.forEach((strip) => {
             const d = Math.random() * maxDelay;
             tl.to(
               strip,
               {
-                x: parseFloat(strip.getAttribute('data-final-x') || '0'),
+                x: parseFloat(strip.getAttribute("data-final-x") || "0"),
                 duration,
                 ease,
-                force3D: true
+                force3D: true,
               },
-              d
+              d,
             );
-            if (colorFrom && colorTo) tl.fromTo(strip, { color: colorFrom }, { color: colorTo, duration, ease }, d);
+            if (colorFrom && colorTo)
+              tl.fromTo(
+                strip,
+                {
+                  color: colorFrom,
+                },
+                {
+                  color: colorTo,
+                  duration,
+                  ease,
+                },
+                d,
+              );
           });
         }
 
@@ -331,7 +387,7 @@ const Shuffle = memo(function Shuffle({
           play();
         };
         hoverHandlerRef.current = handler;
-        el.addEventListener('mouseenter', handler);
+        el.addEventListener("mouseenter", handler);
       };
 
       /** Full setup: build DOM, (optional) randomize scramble chars, play timeline, arm hover, set ready so text is visible. */
@@ -357,7 +413,7 @@ const Shuffle = memo(function Shuffle({
         trigger: el,
         start,
         once: true,
-        onEnter: create
+        onEnter: create,
       });
 
       return () => {
@@ -387,17 +443,34 @@ const Shuffle = memo(function Shuffle({
         triggerOnce,
         respectReducedMotion,
         triggerOnHover,
-        onShuffleComplete
+        onShuffleComplete,
       ],
-      scope: null
-    }
+      scope: null,
+    },
   );
 
-  const commonStyle = useMemo(() => ({ textAlign, ...style }), [textAlign, style]);
-  const classes = useMemo(() => `shuffle-parent ${ready ? 'is-ready' : ''} ${className}`, [ready, className]);
+  const commonStyle = useMemo(
+    () => ({
+      textAlign,
+      ...style,
+    }),
+    [textAlign, style],
+  );
+  const classes = useMemo(
+    () => `shuffle-parent ${ready ? "is-ready" : ""} ${className}`,
+    [ready, className],
+  );
 
-  const Tag = tag || 'p';
-  return React.createElement(Tag, { id: elementId, className: classes, style: commonStyle }, text);
+  const Tag = tag || "p";
+  return React.createElement(
+    Tag,
+    {
+      id: elementId,
+      className: classes,
+      style: commonStyle,
+    },
+    text,
+  );
 });
 
 export default Shuffle;

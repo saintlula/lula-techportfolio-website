@@ -13,12 +13,14 @@
    Custom font
    ========================================================================== */
 
-@font-face {
+@font-face
+{
   font-family: 'AerojonesNF';
   src: url('./assets/fonts/AerojonesNF.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
-  font-display: swap; /* Show fallback font immediately, swap when AerojonesNF loads */
+  font-display: swap;
+  /* Show fallback font immediately, swap when AerojonesNF loads */
 }
 
 /* ==========================================================================
@@ -26,7 +28,10 @@
    ========================================================================== */
 
 /* Ensure html, body, and the React root div take full height with no margin so the app can be full-screen */
-html, body, #root {
+html,
+body,
+#root
+{
   height: 100%;
   margin: 0;
 }
@@ -36,7 +41,8 @@ html, body, #root {
    ========================================================================== */
 
 /* Wraps FaultyTerminal + header/content or click-stack. Flex centers the content. contain limits layout recalc. */
-.app-container {
+.app-container
+{
   width: 100vw;
   height: 100vh;
   position: relative;
@@ -48,8 +54,10 @@ html, body, #root {
 }
 
 /* Mobile browser address-bar safe height. */
-@supports (height: 100dvh) {
-  .app-container {
+@supports (height: 100dvh)
+{
+  .app-container
+  {
     height: 100dvh;
   }
 }
@@ -58,7 +66,8 @@ html, body, #root {
    Portal button (opens alternate design)
    ========================================================================== */
 
-.more-portal-button {
+.more-portal-button
+{
   position: fixed;
   top: 1.1rem;
   right: 1.1rem;
@@ -76,32 +85,136 @@ html, body, #root {
   text-transform: uppercase;
   text-shadow:
     2px 0px 0px #000,
-   -2px 0px 0px #000,
+    -2px 0px 0px #000,
     0px 2px 0px #000,
     0px -2px 0px #000,
     0px 0px 12px rgba(0, 0, 0, 0.7);
   transition: opacity 0.18s ease, transform 0.18s ease, text-decoration-color 0.18s ease;
 }
 
-.more-portal-button:hover {
+.style-menu
+{
+  position: fixed;
+  top: 1.1rem;
+  right: 1.1rem;
+  z-index: 3;
+}
+
+.style-menu .more-portal-button
+{
+  position: static;
+}
+
+.style-menu__panel
+{
+  position: absolute;
+  top: calc(100% + 0.55rem);
+  right: 0;
+  width: min(88vw, 430px);
+  padding: 11px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.38);
+  background: linear-gradient(to top,
+      rgba(220, 100, 40, 0.97),
+      rgba(220, 100, 40, 0.89));
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.32);
+  border-radius: 12px;
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.style-menu__panel.is-open
+{
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.style-menu__text
+{
+  margin: 0;
+  color: rgba(255, 255, 255, 0.96);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.76rem;
+  line-height: 1.42;
+  letter-spacing: 0.015em;
+}
+
+.style-menu__link
+{
+  margin-top: 8px;
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  padding: 7px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: 'AerojonesNF', sans-serif;
+  font-size: clamp(0.86rem, 1.4vw, 1rem);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  transition: background 180ms ease, border-color 180ms ease, transform 180ms ease;
+}
+
+.style-menu__link:hover,
+.style-menu__link:focus-visible
+{
+  background: rgba(255, 255, 255, 0.24);
+  border-color: rgba(255, 255, 255, 0.9);
+  transform: translateY(-1px);
+  outline: none;
+}
+
+.style-menu__note
+{
+  margin: 8px 0 0;
+  color: rgba(255, 255, 255, 0.92);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.73rem;
+  font-style: italic;
+  line-height: 1.35;
+}
+
+.more-portal-button:hover
+{
   opacity: 0.95;
   text-decoration: underline;
   text-underline-offset: 0.35em;
 }
 
-.more-portal-button:active {
+.more-portal-button:active
+{
   transform: translateY(0);
 }
 
-.more-portal-button:focus-visible {
+.more-portal-button:focus-visible
+{
   outline: 2px solid rgba(255, 255, 255, 0.9);
   outline-offset: 3px;
 }
 
-@media (max-width: 600px) {
-  .more-portal-button {
+@media (max-width: 600px)
+{
+  .more-portal-button
+  {
     top: max(0.9rem, env(safe-area-inset-top));
     right: max(0.9rem, env(safe-area-inset-right));
+  }
+
+  .style-menu
+  {
+    top: max(0.9rem, env(safe-area-inset-top));
+    right: max(0.9rem, env(safe-area-inset-right));
+  }
+
+  .style-menu__panel
+  {
+    width: min(92vw, 390px);
+    padding: 10px 11px;
   }
 }
 
@@ -110,7 +223,8 @@ html, body, #root {
    ========================================================================== */
 
 /* Positioned at --start-x and --start-y (set inline from the clicked label's center). transform centers the text on that point. */
-.page-header {
+.page-header
+{
   position: fixed;
   left: var(--start-x, 50%);
   top: var(--start-y, 50%);
@@ -121,7 +235,8 @@ html, body, #root {
 }
 
 /* When the zoom has settled, we add this class so the header moves to the top center. */
-.page-header--at-top {
+.page-header--at-top
+{
   left: 50%;
   top: 1.5rem;
   transform: translate(-50%, 0);
@@ -129,7 +244,8 @@ html, body, #root {
 }
 
 /* When content would overlap header/return (e.g. small viewport), header slides left smoothly. Only applied when at-top. */
-.page-header--at-top.page-header--cramped {
+.page-header--at-top.page-header--cramped
+{
   left: 1.5rem;
   transform: translate(0, 0);
   transition-duration: 0.45s, 0.45s, 0.45s;
@@ -137,7 +253,8 @@ html, body, #root {
 }
 
 /* When the user has clicked Return, the header animates back to the label position; this class makes that transition 1.1s to match the zoom-back. */
-.page-header--returning {
+.page-header--returning
+{
   transition-duration: 1.1s;
 }
 
@@ -146,7 +263,8 @@ html, body, #root {
    ========================================================================== */
 
 /* Shown at the bottom center when a page is selected. Uses right + transform so cramped slide animates smoothly. */
-.return-button {
+.return-button
+{
   position: fixed;
   bottom: 1.5rem;
   right: 50%;
@@ -166,56 +284,68 @@ html, body, #root {
    Mobile-only fit & readability
    (desktop visuals unchanged)
    ------------------------------ */
-@media (max-width: 600px) {
-  .click-stack {
+@media (max-width: 600px)
+{
+  .click-stack
+  {
     gap: 0.75rem;
     max-height: 92%;
   }
 
-  .shuffle-parent {
+  .shuffle-parent
+  {
     /* Keep the desktop feel, but prevent overflow on narrow screens. */
     font-size: clamp(2.1rem, 10vw, 3.25rem);
     letter-spacing: 0.01em;
   }
 
-  .page-header--at-top.page-header--cramped {
+  .page-header--at-top.page-header--cramped
+  {
     left: 1rem;
   }
 
-  .return-button {
+  .return-button
+  {
     padding: 0.45rem 1rem;
   }
 
   /* Respect safe areas (iOS notch/home indicator) on mobile only. */
-  @supports (padding: max(0px)) {
-    .page-header--at-top {
+  @supports (padding: max(0px))
+  {
+    .page-header--at-top
+    {
       top: max(1.25rem, env(safe-area-inset-top));
     }
 
-    .return-button {
+    .return-button
+    {
       bottom: max(1.25rem, env(safe-area-inset-bottom));
     }
 
-    .app-footer {
+    .app-footer
+    {
       padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
       padding-left: max(1rem, env(safe-area-inset-left));
       padding-right: max(1rem, env(safe-area-inset-right));
     }
   }
 
-  .app-footer__item {
+  .app-footer__item
+  {
     white-space: normal;
     text-align: center;
   }
 
   /* Reduce visual noise on very small widths by dropping separators. */
-  .app-footer__separator {
+  .app-footer__separator
+  {
     display: none;
   }
 }
 
 /* When Return is clicked, hide immediately (no linger). */
-.return-button--hidden {
+.return-button--hidden
+{
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -223,30 +353,35 @@ html, body, #root {
 }
 
 /* On a zoomed page we always use this modifier so the button is white (visible on the terminal). */
-.return-button--zoomed {
+.return-button--zoomed
+{
   color: #fff;
   border-color: #fff;
 }
 
 /* When content would overlap, return button slides right smoothly (right + transform both transition). */
-.return-button--zoomed.return-button--cramped {
+.return-button--zoomed.return-button--cramped
+{
   right: 1.5rem;
   transform: translateX(0);
 }
 
-.return-button:hover {
+.return-button:hover
+{
   opacity: 0.9;
   color: #9bc997;
 }
 
 /* When zoomed, keep button white on hover (higher specificity). */
-.return-button.return-button--zoomed:hover {
+.return-button.return-button--zoomed:hover
+{
   opacity: 0.9;
   color: #fff;
   border-color: #fff;
 }
 
-.return-button:focus-visible {
+.return-button:focus-visible
+{
   outline: 2px solid currentColor;
   outline-offset: 2px;
 }
@@ -256,7 +391,8 @@ html, body, #root {
    ========================================================================== */
 
 /* Vertical stack of the three labels, centered. gap spaces them; max-height/overflow keep them on screen. */
-.click-stack {
+.click-stack
+{
   position: relative;
   display: flex;
   flex-direction: column;
@@ -274,12 +410,14 @@ html, body, #root {
 
 /* Both the click-stack labels and the page header use AerojonesNF for the Shuffle text. */
 .click-stack .shuffle-parent,
-.page-header .shuffle-parent {
+.page-header .shuffle-parent
+{
   font-family: 'AerojonesNF', sans-serif;
 }
 
 /* Base Shuffle container: responsive font size, centered, block so it doesn't collapse. */
-.shuffle-parent {
+.shuffle-parent
+{
   font-size: clamp(2.5rem, 5vw, 4rem);
   text-align: center;
   line-height: 1.1;
@@ -292,7 +430,8 @@ html, body, #root {
    ========================================================================== */
 
 /* Fixed at bottom; bright orange so it's visible. Slides down off screen when ABOUT/COVER/RESUME is opened, slides back up when Return is clicked. */
-.app-footer {
+.app-footer
+{
   position: fixed;
   bottom: 0;
   left: 0;
@@ -309,11 +448,13 @@ html, body, #root {
   box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.2);
 }
 
-.app-footer--off-screen {
+.app-footer--off-screen
+{
   transform: translateY(100%);
 }
 
-.app-footer__inner {
+.app-footer__inner
+{
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -323,15 +464,18 @@ html, body, #root {
   margin: 0 auto;
 }
 
-.app-footer__item {
+.app-footer__item
+{
   white-space: nowrap;
 }
 
-.app-footer__label {
+.app-footer__label
+{
   color: rgba(255, 255, 255, 0.9);
 }
 
-.app-footer__link {
+.app-footer__link
+{
   color: #fff;
   background: transparent;
   text-decoration: none;
@@ -343,13 +487,15 @@ html, body, #root {
   transition: color 0.2s, border-color 0.2s, opacity 0.2s;
 }
 
-.app-footer__link:hover {
+.app-footer__link:hover
+{
   color: #fff;
   border-color: rgba(255, 255, 255, 0.9);
   opacity: 0.95;
 }
 
-.app-footer__link:focus-visible {
+.app-footer__link:focus-visible
+{
   outline: 2px solid #fff;
   outline-offset: 2px;
 }
@@ -357,19 +503,19 @@ html, body, #root {
 /* ==========================================================================
    Email prompt (bottom sheet)
    ========================================================================== */
-.app-email-prompt {
+.app-email-prompt
+{
   position: fixed;
   left: 50%;
   bottom: calc(2.8rem + env(safe-area-inset-bottom, 0px));
   transform: translate(-50%, 16px);
   width: min(92vw, 460px);
-  z-index: 3; /* above footer */
+  z-index: 3;
+  /* above footer */
 
-  background: linear-gradient(
-    to top,
-    rgba(220, 100, 40, 0.98),
-    rgba(220, 100, 40, 0.88)
-  );
+  background: linear-gradient(to top,
+      rgba(220, 100, 40, 0.98),
+      rgba(220, 100, 40, 0.88));
   border: 1px solid rgba(255, 255, 255, 0.35);
   border-radius: 14px;
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.25);
@@ -380,13 +526,15 @@ html, body, #root {
   transition: opacity 180ms ease, transform 180ms ease;
 }
 
-.app-email-prompt.is-open {
+.app-email-prompt.is-open
+{
   opacity: 1;
   pointer-events: auto;
   transform: translate(-50%, 0);
 }
 
-.app-email-prompt__title {
+.app-email-prompt__title
+{
   color: rgba(255, 255, 255, 0.95);
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-weight: 900;
@@ -395,14 +543,16 @@ html, body, #root {
   line-height: 1.35;
 }
 
-.app-email-prompt__actions {
+.app-email-prompt__actions
+{
   margin-top: 10px;
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
-.app-email-prompt__btn {
+.app-email-prompt__btn
+{
   appearance: none;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.55);
@@ -418,23 +568,27 @@ html, body, #root {
 }
 
 .app-email-prompt__btn:hover,
-.app-email-prompt__btn:focus-visible {
+.app-email-prompt__btn:focus-visible
+{
   background: rgba(255, 255, 255, 0.25);
   outline: none;
 }
 
-.app-email-prompt__btn--primary {
+.app-email-prompt__btn--primary
+{
   background: #fff;
   border-color: #fff;
   color: rgba(220, 100, 40, 0.95);
 }
 
 .app-email-prompt__btn--primary:hover,
-.app-email-prompt__btn--primary:focus-visible {
+.app-email-prompt__btn--primary:focus-visible
+{
   background: rgba(255, 255, 255, 0.92);
 }
 
-.app-email-prompt__note {
+.app-email-prompt__note
+{
   margin-top: 8px;
   color: rgba(255, 255, 255, 0.95);
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
@@ -442,22 +596,27 @@ html, body, #root {
   font-size: 0.72rem;
 }
 
-@media (max-width: 600px) {
-  .app-email-prompt {
+@media (max-width: 600px)
+{
+  .app-email-prompt
+  {
     bottom: calc(2.5rem + env(safe-area-inset-bottom, 0px));
     padding: 10px 10px 9px;
   }
 
-  .app-email-prompt__title {
+  .app-email-prompt__title
+  {
     font-size: 0.76rem;
   }
 }
 
-.app-footer__separator {
+.app-footer__separator
+{
   color: rgba(255, 255, 255, 0.7);
   user-select: none;
 }
 
-.app-footer__copyright {
+.app-footer__copyright
+{
   color: rgba(255, 255, 255, 0.85);
 }

@@ -287,14 +287,22 @@ function ScreenView({
         <button type="button" className="more-design__arrow more-design__arrow--up more-design__arrow--blue" aria-label="Back to landing" onClick={onToLanding}>
           ↑
         </button>
-        <div className="more-design__solid-inner">
+        <div className="more-design__solid-inner more-design__solid-inner--about">
           <div ref={aboutTitleRef} className="more-design__solid-title">ABOUT</div>
-                <div className="more-design__solid-sub">
-                    First of all, thank you for taking the time to visit my website! My name is Ehlinaz, though I often go by Lula. I'm a recent university graduate with a background in software engineering and a passion for building (or trying to build) things.
-                    I created this site for a few reasons however mainly because I believe portfolios should be more than a list of skills on a page. And because 'proficient in React' on a CV doesn't really tell you much. Especially not how someone thinks or codes, so I wanted to give a better look at that.
-                    This website itself is part of that process. It was built with the help of open-source tools, design inspiration from the React ecosystem, and a lot of time spent reading documentation written by developers who care deeply about their craft.
-                    More than anything, this page exists to show curiosity, intention, and growth. I'd like to say it's not about perfection, it's about momentum.
-</div>
+          <div className="more-design__content-block more-design__content-block--about">
+            <p>
+              First of all, thank you for taking the time to visit my website! My name is Ehlinaz, though I often go by Lula. I'm a recent university graduate with a background in software engineering and a passion for building (or trying to build) things.
+            </p>
+            <p>
+              I created this site for a few reasons however mainly because I believe portfolios should be more than a list of skills on a page. And because 'proficient in React' on a CV doesn't really tell you much. Especially not how someone thinks or codes, so I wanted to give a better look at that.
+            </p>
+            <p>
+              This website itself is part of that process. It was built with the help of open-source tools, design inspiration from the React ecosystem, and a lot of time spent reading documentation written by developers who care deeply about their craft.
+            </p>
+            <p>
+              More than anything, this page exists to show curiosity, intention, and growth. I'd like to say it's not about perfection, it's about momentum.
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -335,13 +343,22 @@ function ScreenView({
       <button type="button" className="more-design__arrow more-design__arrow--right more-design__arrow--cream" aria-label="Back to resume" onClick={onToResume}>
         →
       </button>
-      <div className="more-design__solid-inner">
+      <div className="more-design__solid-inner more-design__solid-inner--cover">
         <div ref={coverTitleRef} className="more-design__solid-title">COVER</div>
-              <div className="more-design__solid-sub">I'm a software engineering graduate with hands-on experience in JavaScript, React Native, and mobile development. I also have a background in C++, which gave me a solid foundation in how software works at a lower level, and I think that carries over into how I approach problems generally. I'm early in my career and still figuring out where I fit in the industry.
-                  And again as a new graduate, I'm very aware that there is still a lot I don't know. What I try to bring instead is curiosity, persistence, and a genuine interest in understanding how things work. I'm comfortable reading documentation, learning unfamiliar tools and I enjoy the process of improving through iteration.
-                  This portfolio exists to hopefully show my approach more clearly than a traditional cover letter can. Rather than listing skills, I wanted to demonstrate how I think, how I learn, and how I translate ideas into working software.
-                  I'm looking for opportunities where I can contribute, keep learning, and grow alongside more experienced engineers, while doing work that is thoughtful, practical, and well-built.
-</div>
+        <div className="more-design__content-block more-design__content-block--cover">
+          <p>
+            I'm a software engineering graduate with hands-on experience in JavaScript, React Native, and mobile development. I also have a background in C++, which gave me a solid foundation in how software works at a lower level, and I think that carries over into how I approach problems generally. I'm early in my career and still figuring out where I fit in the industry.
+          </p>
+          <p>
+            And again as a new graduate, I'm very aware that there is still a lot I don't know. What I try to bring instead is curiosity, persistence, and a genuine interest in understanding how things work. I'm comfortable reading documentation, learning unfamiliar tools and I enjoy the process of improving through iteration.
+          </p>
+          <p>
+            This portfolio exists to hopefully show my approach more clearly than a traditional cover letter can. Rather than listing skills, I wanted to demonstrate how I think, how I learn, and how I translate ideas into working software.
+          </p>
+          <p>
+            I'm looking for opportunities where I can contribute, keep learning, and grow alongside more experienced engineers, while doing work that is thoughtful, practical, and well-built.
+          </p>
+        </div>
       </div>
     </div>
   );

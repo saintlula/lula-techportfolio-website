@@ -95,6 +95,8 @@ const HoverShuffle = memo(function HoverShuffle({ defaultText, hoverText, onClic
 
 function App() {
   const [siteVariant, setSiteVariant] = useState('terminal'); // 'terminal' | 'more'
+  const [showStyleMenu, setShowStyleMenu] = useState(false);
+  const styleMenuRef = useRef(null);
 
   const emailAddress = 'lulaworkau@gmail.com';
   const [showEmailPrompt, setShowEmailPrompt] = useState(false);
@@ -174,6 +176,7 @@ function App() {
 
   const openMoreDesign = useCallback(() => {
     resetTerminalUi();
+    setShowStyleMenu(false);
     setSiteVariant('more');
   }, [resetTerminalUi]);
 
@@ -288,6 +291,26 @@ function App() {
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [showEmailPrompt]);
+
+  useEffect(() => {
+    if (!showStyleMenu) return;
+    const onPointerDown = (ev) => {
+      if (!styleMenuRef.current?.contains(ev.target)) {
+        setShowStyleMenu(false);
+      }
+    };
+    const onKeyDown = (ev) => {
+      if (ev.key === 'Escape') {
+        setShowStyleMenu(false);
+      }
+    };
+    window.addEventListener('pointerdown', onPointerDown);
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      window.removeEventListener('pointerdown', onPointerDown);
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [showStyleMenu]);
 
   useEffect(() => {
     if (siteVariant === 'more' || selectedWord) {
@@ -424,9 +447,38 @@ function App() {
       ) : (
         /* Main view: three labels that switch to "CLICK" on hover and navigate on click. */
         <>
-          <button type="button" className="more-portal-button" onClick={openMoreDesign} aria-label="Open alternate design">
-            But wait there&apos;s more!
-          </button>
+          <div ref={styleMenuRef} className={`style-menu ${showStyleMenu ? 'is-open' : ''}`}>
+            <button
+              type="button"
+              className="more-portal-button"
+              onClick={() => setShowStyleMenu(prev => !prev)}
+              aria-label="Open style options"
+              aria-expanded={showStyleMenu}
+              aria-controls="style-menu-panel"
+            >
+              But wait there&apos;s more!
+            </button>
+            <div
+              id="style-menu-panel"
+              className={`style-menu__panel ${showStyleMenu ? 'is-open' : ''}`}
+              role="dialog"
+              aria-label="Style options"
+              aria-hidden={!showStyleMenu}
+            >
+              <p className="style-menu__text">
+                You&apos;re currently in the terminal style! Would you like to see a different style? You can go to:
+              </p>
+              <button
+                type="button"
+                className="style-menu__link"
+                onClick={openMoreDesign}
+                aria-label="Go to Ocean Blue style"
+              >
+                Ocean Blue
+              </button>
+              <p className="style-menu__note">Please note that it is the same content though!</p>
+            </div>
+          </div>
           <div className="click-stack">
             <HoverShuffle defaultText="ABOUT" hoverText="CLICK" onClick={handleAboutClick} />
             <HoverShuffle defaultText="RESUME" hoverText="CLICK" onClick={handleResumeClick} />

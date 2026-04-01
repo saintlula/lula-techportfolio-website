@@ -14,7 +14,8 @@
    ========================================================================== */
 
 /* Container for the text. Hidden until GSAP has built so we don't see a flash of plain text. */
-.shuffle-parent {
+.shuffle-parent
+{
   display: inline-block;
   white-space: normal;
   word-wrap: break-word;
@@ -29,38 +30,41 @@
   /* Thick black outline in 8 directions so text stays readable on any background (terminal, etc.) */
   text-shadow:
     3px 0px 0px #000,
-   -3px 0px 0px #000,
+    -3px 0px 0px #000,
     0px 3px 0px #000,
     0px -3px 0px #000,
 
     3px 3px 0px #000,
-   -3px 3px 0px #000,
+    -3px 3px 0px #000,
     3px -3px 0px #000,
-   -3px -3px 0px #000,
+    -3px -3px 0px #000,
 
     0px 0px 14px rgba(0, 0, 0, 0.7);
 }
 
 /* Mobile: keep outline, but reduce thickness so text stays sharp/legible. */
-@media (max-width: 600px) {
-  .shuffle-parent {
+@media (max-width: 600px)
+{
+  .shuffle-parent
+  {
     text-shadow:
       2px 0px 0px #000,
-     -2px 0px 0px #000,
+      -2px 0px 0px #000,
       0px 2px 0px #000,
       0px -2px 0px #000,
 
       2px 2px 0px #000,
-     -2px 2px 0px #000,
+      -2px 2px 0px #000,
       2px -2px 0px #000,
-     -2px -2px 0px #000,
+      -2px -2px 0px #000,
 
       0px 0px 10px rgba(0, 0, 0, 0.75);
   }
 }
 
 /* Once GSAP has built and we've set ready=true, we show the text. */
-.shuffle-parent.is-ready {
+.shuffle-parent.is-ready
+{
   visibility: visible;
 }
 
@@ -69,7 +73,8 @@
    ========================================================================== */
 
 /* Wrapper around each character (created by our build(), not SplitText directly). Hides overflow so the sliding strip only shows one char at a time. */
-.shuffle-char-wrapper {
+.shuffle-char-wrapper
+{
   display: inline-block;
   overflow: hidden;
   vertical-align: baseline;
@@ -77,13 +82,15 @@
 }
 
 /* Inner strip that we animate with transform: translateX(); holds [copy, ...scramble, real] chars. */
-.shuffle-char-wrapper > span {
+.shuffle-char-wrapper>span
+{
   display: inline-flex;
   will-change: transform;
 }
 
 /* Each character node from SplitText. */
-.shuffle-char {
+.shuffle-char
+{
   line-height: 1;
   display: inline-block;
   text-align: center;
